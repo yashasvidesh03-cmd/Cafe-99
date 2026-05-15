@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vrindavan — Waiter</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#F6F4F0;--surface:#FFF;--border:#E8E4DC;--text:#1C1C1A;--muted:#8A8780;--accent:#C8922A;--green:#2D7A4F;--red:#B83232;--dark:#141412;--gold:#C8922A}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px}
+.w-logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--text);margin-bottom:4px;text-align:center}
+.w-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+.w-form{width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px}
+.w-input{background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:13px 16px;border-radius:12px;font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:border-color .2s;width:100%}
+.w-input:focus{border-color:var(--accent)}
+.w-input::placeholder{color:var(--muted)}
+.w-btn{background:var(--dark);color:#fff;border:none;padding:14px;border-radius:12px;font-family:'Jost',sans-serif;font-weight:500;font-size:15px;cursor:pointer;transition:opacity .2s}
+.w-btn:hover{opacity:.85}
+.w-btn:disabled{opacity:.4;cursor:not-allowed}
+.w-err{font-size:12px;color:var(--red);display:none;text-align:center}
+.w-hint{font-size:11px;color:var(--muted);text-align:center}
+
+/* MAIN */
+#waiterApp{display:none}
+.w-nav{background:var(--dark);height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.w-nav-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:#fff}
+.w-nav-brand span{font-family:'Jost',sans-serif;font-size:10px;color:rgba(255,255,255,.4);letter-spacing:1px;text-transform:uppercase;margin-left:8px}
+.w-logout{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:rgba(255,255,255,.7);padding:6px 12px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer}
+
+.w-body{padding:14px}
+
+/* STATS */
+.w-stats{display:flex;gap:8px;margin-bottom:14px}
+.w-stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px;flex:1;text-align:center}
+.w-stat-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text)}
+.w-stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+
+/* WAITER CALL ALERT */
+.call-alert{background:#fff;border:2px solid var(--red);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;animation:alertPulse 1s ease infinite}
+@keyframes alertPulse{0%,100%{box-shadow:0 0 0 0 rgba(184,50,50,0)}50%{box-shadow:0 0 0 6px rgba(184,50,50,.15)}}
+.call-alert-left{display:flex;flex-direction:column;gap:2px}
+.call-alert-table{font-size:15px;font-weight:600;color:var(--red)}
+.call-alert-time{font-size:11px;color:var(--muted)}
+.call-respond-btn{background:var(--red);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.call-respond-btn:hover{opacity:.88}
+
+/* SECTION */
+.sec-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+
+/* ORDER CARDS */
+.w-order{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;transition:all .2s}
+.w-order.ready{border-color:var(--green);background:rgba(45,122,79,.03)}
+.wo-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.wo-table{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--text)}
+.wo-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.wo-status{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:4px 9px;border-radius:20px}
+.ws-ready{background:rgba(45,122,79,.12);color:var(--green)}
+.ws-preparing{background:rgba(200,146,42,.12);color:var(--gold)}
+.ws-served{background:#F3E5F5;color:#6A1B9A}
+.wo-items{font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6}
+.wo-instr{font-size:12px;color:var(--gold);font-style:italic;margin-bottom:10px}
+.wo-actions{display:flex;gap:8px}
+.wo-act{flex:1;border:none;padding:11px;border-radius:10px;font-family:'Jost',sans-serif;font-weight:500;font-size:13px;cursor:pointer;transition:all .2s}
+.wo-act.collect{background:var(--dark);color:#fff}
+.wo-act.collect:hover{opacity:.85}
+.wo-act.secondary{background:var(--bg);border:1px solid var(--border);color:var(--text)}
+.wo-act.secondary:hover{border-color:var(--text)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--dark);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.spacer{height:16px}
+.empty-state{text-align:center;padding:40px 0;color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="w-logo">Vrindavan</div>
+  <div class="w-sub">Waiter App</div>
+  <div class="w-form">
+    <input class="w-input" id="wEmail" type="email" placeholder="Email" oninput="validateW()">
+    <input class="w-input" id="wPass" type="password" placeholder="Password" oninput="validateW()" onkeydown="if(event.key==='Enter')doWLogin()">
+    <div class="w-err" id="wErr"></div>
+    <button class="w-btn" id="wBtn" onclick="doWLogin()" disabled>Sign In</button>
+    <div class="w-hint">waiter@vrindavan.com / Waiter@123</div>
+  </div>
+</div>
+
+<!-- WAITER APP -->
+<div id="waiterApp">
+  <div class="w-nav">
+    <div class="w-nav-brand">Vrindavan <span>Waiter</span></div>
+    <button class="w-logout" onclick="doWLogout()">Exit</button>
+  </div>
+  <div class="w-body">
+    <div class="w-stats">
+      <div class="w-stat"><div class="w-stat-val" id="w-cnt-ready" style="color:var(--green)">0</div><div class="w-stat-lbl">Ready</div></div>
+      <div class="w-stat"><div class="w-stat-val" id="w-cnt-serving">0</div><div class="w-stat-lbl">Serving</div></div>
+      <div class="w-stat"><div class="w-stat-val" id="w-cnt-calls" style="color:var(--red)">0</div><div class="w-stat-lbl">Calls</div></div>
+    </div>
+
+    <div id="waiterCallsSection"></div>
+
+    <div class="sec-label">Ready to Serve</div>
+    <div id="readyOrders"></div>
+
+    <div class="spacer"></div>
+    <div class="sec-label">All My Tables</div>
+    <div id="allOrders"></div>
+  </div>
+</div>
+
+<div class="toast" id="wToast"></div>
+
+<script>
+const API = window.location.hostname==='localhost'?'http://localhost:3001/api':'/api';
+
+let waiterOrders = [
+  {id:47,table:5,status:'ready',items:'Paneer Butter Masala ×2, Garlic Naan ×3, Mango Lassi ×2',instructions:'',customer:'Ramesh K.',time:new Date(Date.now()-3*60000)},
+  {id:46,table:12,status:'preparing',items:'Dal Makhani ×1, Jeera Rice ×2, Gulab Jamun ×4',instructions:'Less spicy please',customer:'Priya M.',time:new Date(Date.now()-12*60000)},
+  {id:45,table:3,status:'ready',items:'Masala Dosa ×2, Filter Coffee ×2',instructions:'',customer:'Anil S.',time:new Date(Date.now()-18*60000)},
+];
+
+let waiterCalls = [{table:8,customer:'Mohan Lal',time:new Date(Date.now()-2*60000)}];
+let pollTimer;
+
+// ── LOGIN ──
+function validateW(){
+  const e=document.getElementById('wEmail').value;
+  const p=document.getElementById('wPass').value;
+  document.getElementById('wBtn').disabled=!(e&&p.length>=4);
+}
+
+async function doWLogin(){
+  const email=document.getElementById('wEmail').value.trim();
+  const pass=document.getElementById('wPass').value;
+  const err=document.getElementById('wErr');
+  const btn=document.getElementById('wBtn');
+  btn.disabled=true; btn.textContent='Signing in...'; err.style.display='none';
+
+  try{
+    const res=await fetch(`${API}/admin/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const data=await res.json();
+    if(data.success){openWaiter();return;}
+    err.textContent=data.error||'Invalid credentials'; err.style.display='block';
+  }catch{
+    if(email==='waiter@vrindavan.com'&&pass==='Waiter@123'){openWaiter();return;}
+    if((email==='owner@vrindavan.com'&&pass==='Admin@123')||(email==='staff@vrindavan.com'&&pass==='Staff@123')){openWaiter();return;}
+    err.textContent='Invalid credentials'; err.style.display='block';
+  }
+  btn.disabled=false; btn.textContent='Sign In';
+}
+
+function openWaiter(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('waiterApp').style.display='block';
+  renderWaiter();
+  pollTimer=setInterval(()=>{
+    try{fetchWaiterOrders();}catch{}
+    renderWaiter();
+  },15000);
+}
+
+async function fetchWaiterOrders(){
+  const res=await fetch(`${API}/admin/orders?status=ready`,{headers:{'Authorization':'Bearer demo'}});
+  const data=await res.json();
+  if(data.success) waiterOrders=data.data;
+}
+
+function doWLogout(){
+  clearInterval(pollTimer);
+  document.getElementById('waiterApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('wPass').value='';
+  document.getElementById('wBtn').disabled=true;
+  document.getElementById('wBtn').textContent='Sign In';
+}
+
+// ── RENDER ──
+function renderWaiter(){
+  const readyOrds=waiterOrders.filter(o=>o.status==='ready');
+  const allOrds=waiterOrders.filter(o=>o.status!=='collected'&&o.status!=='cancelled');
+
+  document.getElementById('w-cnt-ready').textContent=readyOrds.length;
+  document.getElementById('w-cnt-serving').textContent=waiterOrders.filter(o=>o.status==='served').length;
+  document.getElementById('w-cnt-calls').textContent=waiterCalls.length;
+
+  // Waiter calls
+  const callsSec=document.getElementById('waiterCallsSection');
+  if(waiterCalls.length){
+    let html='';
+    waiterCalls.forEach((c,i)=>{
+      const mins=Math.floor((Date.now()-c.time.getTime())/60000);
+      html+=`<div class="call-alert"><div class="call-alert-left"><div class="call-alert-table">🙋 Table ${c.table} needs you</div><div class="call-alert-time">${c.customer} · ${mins}m ago</div></div><button class="call-respond-btn" onclick="dismissCall(${i})">Respond ✓</button></div>`;
+    });
+    callsSec.innerHTML=html;
+    playAlert();
+  }else{
+    callsSec.innerHTML='';
+  }
+
+  // Ready orders
+  const readyCont=document.getElementById('readyOrders');
+  if(!readyOrds.length){readyCont.innerHTML='<div class="empty-state">No orders ready to serve</div>';
+  }else{
+    let html='';
+    readyOrds.forEach(o=>{
+      html+=`<div class="w-order ready">
+        <div class="wo-top"><div><div class="wo-table">Table ${o.table}</div><div class="wo-meta">${o.customer||'Guest'} · #VR-${String(o.id).padStart(4,'0')}</div></div><span class="wo-status ws-ready">Ready ✓</span></div>
+        <div class="wo-items">${o.items}</div>
+        ${o.instructions?`<div class="wo-instr">📝 ${o.instructions}</div>`:''}
+        <div class="wo-actions"><button class="wo-act collect" onclick="markServed(${o.id})">Mark as Served →</button></div>
+      </div>`;
+    });
+    readyCont.innerHTML=html;
+  }
+
+  // All orders
+  const allCont=document.getElementById('allOrders');
+  if(!allOrds.length){allCont.innerHTML='<div class="empty-state">No active orders</div>';
+  }else{
+    let html='';
+    allOrds.forEach(o=>{
+      const sMap={ready:'ws-ready',preparing:'ws-preparing',served:'ws-served'};
+      const sLbl={ready:'Ready',preparing:'Preparing',served:'Served'};
+      html+=`<div class="w-order ${o.status==='ready'?'ready':''}">
+        <div class="wo-top"><div><div class="wo-table">Table ${o.table}</div><div class="wo-meta">${o.customer||'Guest'} · #VR-${String(o.id).padStart(4,'0')}</div></div><span class="wo-status ${sMap[o.status]||''}">${sLbl[o.status]||o.status}</span></div>
+        <div class="wo-items">${o.items}</div>
+        ${o.instructions?`<div class="wo-instr">📝 ${o.instructions}</div>`:''}
+        <div class="wo-actions">
+          ${o.status==='ready'?`<button class="wo-act collect" onclick="markServed(${o.id})">Mark Served →</button>`:''}
+          ${o.status==='served'?`<button class="wo-act collect" onclick="markCollected(${o.id})">Cash Collected ✓</button>`:''}
+          ${o.status==='preparing'?`<button class="wo-act secondary" disabled style="opacity:.5">Kitchen Preparing...</button>`:''}
+        </div>
+      </div>`;
+    });
+    allCont.innerHTML=html;
+  }
+}
+
+async function markServed(id){
+  const order=waiterOrders.find(o=>o.id===id);
+  if(!order)return;
+  order.status='served';
+  try{await fetch(`${API}/admin/orders/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer demo'},body:JSON.stringify({status:'served'})});}catch{}
+  wToast(`Table ${order.table} — Marked as served ✓`);
+  renderWaiter();
+}
+
+async function markCollected(id){
+  const order=waiterOrders.find(o=>o.id===id);
+  if(!order)return;
+  order.status='collected';
+  try{await fetch(`${API}/admin/orders/${id}/status`,{method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer demo'},body:JSON.stringify({status:'collected'})});}catch{}
+  waiterOrders=waiterOrders.filter(o=>o.id!==id);
+  wToast(`Cash collected from Table ${order.table} ✓`);
+  renderWaiter();
+}
+
+function dismissCall(idx){
+  const call=waiterCalls[idx];
+  waiterCalls.splice(idx,1);
+  wToast(`Responded to Table ${call.table} ✓`);
+  renderWaiter();
+}
+
+let alertPlayed=false;
+function playAlert(){
+  if(alertPlayed)return;
+  alertPlayed=true;
+  setTimeout(()=>alertPlayed=false,30000);
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    [0,.15,.3].forEach(t=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.frequency.value=660;
+      gain.gain.setValueAtTime(0.2,ctx.currentTime+t);
+      gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+t+0.15);
+      osc.start(ctx.currentTime+t);osc.stop(ctx.currentTime+t+0.15);
+    });
+  }catch{}
+}
+
+let wToastTimer;
+function wToast(msg){
+  const el=document.getElementById('wToast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(wToastTimer);
+  wToastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>

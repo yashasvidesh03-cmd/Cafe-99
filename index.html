@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vrindavan — Kitchen</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600&family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0A0A09;--surface:#161614;--border:#242422;--text:#F0EDE8;--muted:#6A6A68;--green:#3D9B65;--warn:#E8B84B;--red:#C84040;--gold:#D4A43A}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px}
+.k-logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--text);margin-bottom:4px;text-align:center}
+.k-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+.k-form{width:100%;max-width:300px;display:flex;flex-direction:column;gap:12px}
+.k-input{background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:13px 16px;border-radius:12px;font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:border-color .2s;width:100%}
+.k-input:focus{border-color:var(--gold)}
+.k-input::placeholder{color:var(--muted)}
+.k-btn{background:var(--gold);color:#000;border:none;padding:14px;border-radius:12px;font-family:'Jost',sans-serif;font-weight:600;font-size:15px;cursor:pointer;transition:opacity .2s}
+.k-btn:hover{opacity:.88}
+.k-btn:disabled{opacity:.4;cursor:not-allowed}
+.k-err{font-size:12px;color:var(--red);display:none;text-align:center}
+.k-hint{font-size:11px;color:var(--muted);text-align:center}
+
+/* MAIN */
+#kitchenApp{display:none}
+.k-nav{background:var(--surface);height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.k-nav-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--text)}
+.k-nav-brand span{font-family:'Jost',sans-serif;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-left:8px}
+.k-logout{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer}
+.k-logout:hover{color:var(--text);border-color:var(--text)}
+
+.k-body{padding:12px}
+
+/* STATS BAR */
+.stats-bar{display:flex;gap:8px;margin-bottom:14px}
+.stat-chip{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 12px;flex:1;text-align:center}
+.stat-val{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.new-count{color:var(--warn)}
+.prep-count{color:var(--gold)}
+.ready-count{color:var(--green)}
+
+/* LIVE INDICATOR */
+.live-bar{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:8px 12px;background:var(--surface);border-radius:8px;border:1px solid var(--border)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.live-text{font-size:11px;color:var(--muted)}
+
+/* ORDER CARDS */
+.orders-grid{display:flex;flex-direction:column;gap:10px}
+
+.k-order{border-radius:14px;padding:16px;border:2px solid;transition:all .2s}
+.k-order.new{background:rgba(232,184,75,.06);border-color:var(--warn);animation:newPulse 1.5s ease 4}
+@keyframes newPulse{0%,100%{box-shadow:none}50%{box-shadow:0 0 20px rgba(232,184,75,.3)}}
+.k-order.preparing{background:rgba(212,164,58,.04);border-color:var(--gold)}
+.k-order.ready{background:rgba(61,155,101,.06);border-color:var(--green)}
+
+.ko-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+.ko-table{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text)}
+.ko-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.ko-time{text-align:right}
+.ko-mins{font-size:20px;font-weight:600;font-family:'Cormorant Garamond',serif}
+.ko-mins.ok{color:var(--green)}
+.ko-mins.warn{color:var(--warn)}
+.ko-mins.late{color:var(--red)}
+.ko-mins-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+
+.ko-items{margin-bottom:14px}
+.ko-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.ko-item:last-child{border-bottom:none}
+.ko-item-name{font-size:14px;font-weight:500;color:var(--text)}
+.ko-item-qty{font-size:20px;font-weight:600;color:var(--gold);font-family:'Cormorant Garamond',serif;min-width:32px;text-align:right}
+
+.ko-instr{background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.2);border-radius:8px;padding:8px 10px;margin-bottom:12px;font-size:12px;color:var(--warn);font-style:italic}
+
+.ko-actions{display:flex;gap:8px}
+.ko-act{flex:1;border:none;padding:12px;border-radius:10px;font-family:'Jost',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s}
+.ko-act.start{background:var(--warn);color:#000}
+.ko-act.start:hover{opacity:.88}
+.ko-act.ready-btn{background:var(--green);color:#fff}
+.ko-act.ready-btn:hover{opacity:.88}
+.ko-act.done{background:var(--surface);border:1px solid var(--green);color:var(--green);flex:none;padding:12px 16px}
+
+/* EMPTY */
+.k-empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.k-empty-icon{font-size:48px;margin-bottom:12px}
+.k-empty-text{font-size:14px}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="k-logo">Vrindavan</div>
+  <div class="k-sub">Kitchen Display</div>
+  <div class="k-form">
+    <input class="k-input" id="kEmail" type="email" placeholder="Email" oninput="validateKLogin()">
+    <input class="k-input" id="kPass" type="password" placeholder="Password" oninput="validateKLogin()" onkeydown="if(event.key==='Enter')doKLogin()">
+    <div class="k-err" id="kErr"></div>
+    <button class="k-btn" id="kBtn" onclick="doKLogin()" disabled>Enter Kitchen</button>
+    <div class="k-hint">kitchen@vrindavan.com / Kitchen@123</div>
+  </div>
+</div>
+
+<!-- KITCHEN APP -->
+<div id="kitchenApp">
+  <div class="k-nav">
+    <div class="k-nav-brand">Vrindavan <span>Kitchen</span></div>
+    <button class="k-logout" onclick="doKLogout()">Exit</button>
+  </div>
+  <div class="k-body">
+    <div class="stats-bar">
+      <div class="stat-chip"><div class="stat-val new-count" id="cnt-new">0</div><div class="stat-lbl">New</div></div>
+      <div class="stat-chip"><div class="stat-val prep-count" id="cnt-prep">0</div><div class="stat-lbl">Preparing</div></div>
+      <div class="stat-chip"><div class="stat-val ready-count" id="cnt-ready">0</div><div class="stat-lbl">Ready</div></div>
+    </div>
+    <div class="live-bar">
+      <div class="live-dot"></div>
+      <div class="live-text">Live — auto-refreshing every 15 seconds</div>
+    </div>
+    <div class="orders-grid" id="kitchenOrders"></div>
+  </div>
+</div>
+
+<div class="toast" id="kToast"></div>
+
+<script>
+const API = window.location.hostname==='localhost'?'http://localhost:3001/api':'/api';
+
+let kitchenOrders = [
+  {id:47,table:5,status:'new',items:[{name:'Paneer Butter Masala',qty:2},{name:'Garlic Naan',qty:3},{name:'Mango Lassi',qty:2}],instructions:'',time:new Date(Date.now()-3*60000)},
+  {id:46,table:12,status:'preparing',items:[{name:'Dal Makhani',qty:1},{name:'Jeera Rice',qty:2},{name:'Gulab Jamun',qty:4}],instructions:'Less spicy please',time:new Date(Date.now()-12*60000)},
+  {id:45,table:3,status:'preparing',items:[{name:'Masala Dosa',qty:2},{name:'Filter Coffee',qty:2}],instructions:'',time:new Date(Date.now()-8*60000)},
+];
+
+let pollTimer;
+
+// ── LOGIN ──
+function validateKLogin(){
+  const e=document.getElementById('kEmail').value;
+  const p=document.getElementById('kPass').value;
+  document.getElementById('kBtn').disabled=!(e&&p.length>=4);
+}
+
+async function doKLogin(){
+  const email=document.getElementById('kEmail').value.trim();
+  const pass=document.getElementById('kPass').value;
+  const err=document.getElementById('kErr');
+  const btn=document.getElementById('kBtn');
+  btn.disabled=true; btn.textContent='Entering...'; err.style.display='none';
+
+  try{
+    const res=await fetch(`${API}/admin/auth/login`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pass})});
+    const data=await res.json();
+    if(data.success){openKitchen();return;}
+    else{err.textContent=data.error||'Invalid credentials';err.style.display='block';}
+  }catch{
+    // Demo mode
+    if(email==='kitchen@vrindavan.com'&&pass==='Kitchen@123'){openKitchen();return;}
+    // Also accept owner/staff for demo
+    if((email==='owner@vrindavan.com'&&pass==='Admin@123')||(email==='staff@vrindavan.com'&&pass==='Staff@123')){openKitchen();return;}
+    err.textContent='Invalid credentials'; err.style.display='block';
+  }
+  btn.disabled=false; btn.textContent='Enter Kitchen';
+}
+
+function openKitchen(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('kitchenApp').style.display='block';
+  renderKitchen();
+  startKPoll();
+}
+
+function doKLogout(){
+  clearInterval(pollTimer);
+  document.getElementById('kitchenApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('kPass').value='';
+  document.getElementById('kBtn').disabled=true;
+  document.getElementById('kBtn').textContent='Enter Kitchen';
+}
+
+// ── POLLING ──
+function startKPoll(){
+  pollTimer=setInterval(async()=>{
+    try{
+      const res=await fetch(`${API}/kitchen/orders`,{headers:{'Authorization':'Bearer demo'}});
+      const data=await res.json();
+      if(data.success)kitchenOrders=data.data;
+    }catch{}
+    renderKitchen();
+  },15000);
+}
+
+// ── RENDER ──
+function renderKitchen(){
+  const active=kitchenOrders.filter(o=>['new','preparing'].includes(o.status));
+  const ready=kitchenOrders.filter(o=>o.status==='ready');
+  const all=[...active,...ready];
+
+  document.getElementById('cnt-new').textContent=kitchenOrders.filter(o=>o.status==='new').length;
+  document.getElementById('cnt-prep').textContent=kitchenOrders.filter(o=>o.status==='preparing').length;
+  document.getElementById('cnt-ready').textContent=ready.length;
+
+  if(!all.length){
+    document.getElementById('kitchenOrders').innerHTML=`<div class="k-empty"><div class="k-empty-icon">✅</div><div class="k-empty-text">All caught up! No pending orders.</div></div>`;
+    return;
+  }
+
+  let html='';
+  all.forEach(o=>{
+    const mins=Math.floor((Date.now()-o.time.getTime())/60000);
+    const timeCls=mins>20?'late':mins>10?'warn':'ok';
+    html+=`
+      <div class="k-order ${o.status}">
+        <div class="ko-top">
+          <div>
+            <div class="ko-table">Table ${o.table}</div>
+            <div class="ko-meta">#VR-${String(o.id).padStart(4,'0')}</div>
+          </div>
+          <div class="ko-time">
+            <div class="ko-mins ${timeCls}">${mins}m</div>
+            <div class="ko-mins-lbl">waiting</div>
+          </div>
+        </div>
+        <div class="ko-items">
+          ${o.items.map(item=>`
+            <div class="ko-item">
+              <div class="ko-item-name">${item.name}</div>
+              <div class="ko-item-qty">×${item.qty}</div>
+            </div>
+          `).join('')}
+        </div>
+        ${o.instructions?`<div class="ko-instr">📝 ${o.instructions}</div>`:''}
+        <div class="ko-actions">
+          ${o.status==='new'?`<button class="ko-act start" onclick="updateKStatus(${o.id},'preparing')">Start Preparing</button>`:''}
+          ${o.status==='preparing'?`<button class="ko-act ready-btn" onclick="updateKStatus(${o.id},'ready')">Mark Ready ✓</button>`:''}
+          ${o.status==='ready'?`<button class="ko-act done" onclick="updateKStatus(${o.id},'served')">Waiter Notified</button>`:''}
+        </div>
+      </div>`;
+  });
+  document.getElementById('kitchenOrders').innerHTML=html;
+}
+
+async function updateKStatus(id,status){
+  const order=kitchenOrders.find(o=>o.id===id);
+  if(!order)return;
+  order.status=status;
+
+  try{
+    await fetch(`${API}/admin/orders/${id}/status`,{
+      method:'PATCH',headers:{'Content-Type':'application/json','Authorization':'Bearer demo'},
+      body:JSON.stringify({status})
+    });
+  }catch{}
+
+  if(status==='ready') kToast(`Table ${order.table} — Order ready! Notify waiter.`);
+  else if(status==='preparing') kToast(`Started preparing Table ${order.table}`);
+  else if(status==='served') kToast(`Table ${order.table} — Waiter notified`);
+
+  if(['served'].includes(status)) kitchenOrders=kitchenOrders.filter(o=>o.id!==id);
+  renderKitchen();
+  playKSound(status);
+}
+
+function playKSound(status){
+  try{
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    if(status==='ready'){osc.frequency.setValueAtTime(440,ctx.currentTime);osc.frequency.setValueAtTime(550,ctx.currentTime+0.1);osc.frequency.setValueAtTime(660,ctx.currentTime+0.2);}
+    else{osc.frequency.setValueAtTime(330,ctx.currentTime);}
+    gain.gain.setValueAtTime(0.2,ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);
+    osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.4);
+  }catch{}
+}
+
+let kToastTimer;
+function kToast(msg){
+  const el=document.getElementById('kToast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(kToastTimer);
+  kToastTimer=setTimeout(()=>el.classList.remove('show'),2800);
+}
+</script>
+</body>
+</html>

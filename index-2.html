@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vrindavan — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0F0F0E;--surface:#1A1A18;--surface2:#222220;--border:#2A2A28;
+  --text:#F0EDE8;--muted:#6A6A68;--accent:#C8922A;--gold:#D4A43A;
+  --green:#3D9B65;--red:#C84040;--blue:#3A7BD5;--warn:#E8B84B;
+}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ── */
+#loginScreen{
+  position:fixed;inset:0;background:var(--bg);z-index:500;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;
+}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--text);margin-bottom:4px;text-align:center}
+.login-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+.login-form{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px}
+.l-input{
+  background:var(--surface);border:1.5px solid var(--border);color:var(--text);
+  padding:13px 16px;border-radius:12px;font-family:'Jost',sans-serif;font-size:14px;
+  outline:none;transition:border-color .2s;width:100%;
+}
+.l-input:focus{border-color:var(--accent)}
+.l-input::placeholder{color:var(--muted)}
+.l-btn{
+  background:var(--accent);color:#fff;border:none;padding:14px;border-radius:12px;
+  font-family:'Jost',sans-serif;font-weight:500;font-size:15px;cursor:pointer;transition:opacity .2s;
+}
+.l-btn:hover{opacity:.88}
+.l-btn:disabled{opacity:.4;cursor:not-allowed}
+.l-err{font-size:12px;color:var(--red);display:none;text-align:center}
+.l-hint{font-size:11px;color:var(--muted);text-align:center;line-height:1.6}
+
+/* ── MAIN ── */
+#adminApp{display:none}
+
+/* ── TOP NAV ── */
+.top-nav{
+  background:var(--surface);height:52px;padding:0 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border);
+}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--text)}
+.nav-brand span{font-family:'Jost',sans-serif;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-left:8px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-role{background:var(--surface2);border:1px solid var(--border);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:.5px}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer;transition:all .2s}
+.logout-btn:hover{color:var(--text);border-color:var(--text)}
+
+/* ── TABS ── */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;padding:0 8px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:13px 14px;border:none;background:transparent;font-family:'Jost',sans-serif;font-size:12px;font-weight:400;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .18s}
+.tab.active{color:var(--text);border-bottom-color:var(--gold);font-weight:500}
+
+/* ── BODY ── */
+.body{padding:16px}
+
+/* ── NOTIFICATION BANNER ── */
+.notif-banner{
+  background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);
+  border-radius:10px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;
+  justify-content:space-between;animation:slideIn .3s ease;
+}
+@keyframes slideIn{from{transform:translateY(-10px);opacity:0}to{transform:translateY(0);opacity:1}}
+.notif-text{font-size:13px;color:var(--text)}
+.notif-time{font-size:11px;color:var(--muted)}
+.notif-dismiss{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0 4px}
+
+/* ── KPIs ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--text);line-height:1;margin-bottom:4px}
+.kpi-change{font-size:11px;color:var(--green)}
+.kpi-change.warn{color:var(--warn)}
+.kpi-change.red{color:var(--red)}
+
+/* ── SECTION HEADING ── */
+.sec-h{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+/* ── ORDER CARD ── */
+.order-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;transition:border-color .2s}
+.order-card.new-order{border-color:var(--accent);animation:pulse-border 1s ease 3}
+@keyframes pulse-border{0%,100%{border-color:var(--accent)}50%{border-color:var(--gold)}}
+.oc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.oc-id{font-weight:600;font-size:14px;color:var(--text)}
+.oc-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.oc-timer{font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;background:var(--surface2)}
+.oc-timer.ok{color:var(--green)}
+.oc-timer.warn{color:var(--warn)}
+.oc-timer.late{color:var(--red)}
+.status{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:4px 9px;border-radius:20px}
+.s-new{background:rgba(200,146,42,.15);color:var(--gold)}
+.s-preparing{background:rgba(58,123,213,.15);color:var(--blue)}
+.s-ready{background:rgba(61,155,101,.15);color:var(--green)}
+.s-served{background:rgba(156,39,176,.15);color:#AB47BC}
+.s-collected{background:rgba(61,155,101,.1);color:var(--green)}
+.s-cancelled{background:rgba(200,64,64,.15);color:var(--red)}
+.oc-items{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.oc-instr{font-size:11px;color:var(--warn);margin-bottom:8px;font-style:italic}
+.oc-bottom{display:flex;justify-content:space-between;align-items:center}
+.oc-total{font-weight:600;font-size:15px;color:var(--text)}
+.oc-acts{display:flex;gap:6px;flex-wrap:wrap}
+.oc-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .18s}
+.oc-btn:hover{border-color:var(--text)}
+.oc-btn.ok{background:rgba(61,155,101,.15);border-color:var(--green);color:var(--green)}
+.oc-btn.ok:hover{background:var(--green);color:#fff}
+.oc-btn.danger{background:rgba(200,64,64,.1);border-color:var(--red);color:var(--red)}
+
+/* ── MENU ADMIN ── */
+.ma-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.ma-dot{width:8px;height:8px;border-radius:1.5px;flex-shrink:0}
+.ma-dot.veg{background:var(--green)}
+.ma-info{flex:1;min-width:0}
+.ma-cat{font-size:10px;color:var(--muted);background:var(--surface2);padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:4px}
+.ma-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px}
+.price-row{display:flex;align-items:center;gap:6px}
+.price-sym{font-size:13px;color:var(--muted)}
+.price-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;width:72px;outline:none;transition:border-color .18s}
+.price-input:focus{border-color:var(--accent)}
+.save-btn{background:transparent;border:1px solid var(--green);color:var(--green);padding:4px 10px;border-radius:7px;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .18s}
+.save-btn:hover{background:var(--green);color:#fff}
+.ma-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.toggle{position:relative;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{position:absolute;inset:0;background:#333;border-radius:11px;cursor:pointer;transition:background .25s}
+.toggle input:checked+.toggle-track{background:var(--green)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .25s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle input:checked~.toggle-thumb{transform:translateX(18px)}
+.toggle-lbl{font-size:10px;color:var(--muted)}
+.low-stock-warn{font-size:10px;color:var(--warn);font-weight:600}
+
+/* ── REVENUE ── */
+.rev-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.rev-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.rev-card-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px}
+.rev-card-val{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.rev-projected{color:var(--warn)}
+.rev-collected{color:var(--green)}
+.rev-pending{color:var(--red)}
+
+/* ── TABLES ── */
+.tables-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+.tbl-card{background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:10px;text-align:center;cursor:pointer;transition:all .18s}
+.tbl-card.occupied{border-color:var(--accent);background:rgba(200,146,42,.08)}
+.tbl-card.waiter-needed{border-color:var(--red);background:rgba(200,64,64,.08);animation:blink .8s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.6}}
+.tbl-num{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text)}
+.tbl-status{font-size:9px;color:var(--muted);margin-top:2px}
+.tbl-status.occ{color:var(--accent)}
+.tbl-status.wait{color:var(--red)}
+
+/* ── QR GENERATOR ── */
+.qr-section{margin-bottom:20px}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qr-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center}
+.qr-table-label{font-size:12px;color:var(--muted);margin-bottom:10px}
+.qr-box{background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:10px;min-height:100px;display:flex;align-items:center;justify-content:center}
+.qr-placeholder{font-size:40px}
+.qr-download{background:var(--accent);color:#fff;border:none;width:100%;padding:8px;border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:opacity .2s}
+.qr-download:hover{opacity:.88}
+
+/* ── THEMES ── */
+.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.theme-card{background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:14px;cursor:pointer;transition:all .18s;position:relative}
+.theme-card:hover{border-color:var(--text)}
+.theme-card.active{border-color:var(--gold)}
+.theme-preview{height:52px;border-radius:8px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.theme-name{font-size:13px;font-weight:500;color:var(--text);margin-bottom:2px}
+.theme-desc{font-size:11px;color:var(--muted)}
+.active-pip{position:absolute;top:10px;right:10px;width:8px;height:8px;background:var(--gold);border-radius:50%}
+
+/* ── STAFF ── */
+.staff-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.staff-info{display:flex;flex-direction:column;gap:2px}
+.staff-name{font-size:14px;font-weight:500;color:var(--text)}
+.staff-role{font-size:11px;color:var(--muted)}
+.staff-status{font-size:10px;font-weight:600;padding:3px 8px;border-radius:6px}
+.staff-online{background:rgba(61,155,101,.15);color:var(--green)}
+.staff-offline{background:var(--surface2);color:var(--muted)}
+
+/* ── CHARTS ── */
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:12px}
+.chart-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:14px}
+.bars{display:flex;align-items:flex-end;gap:5px;height:80px}
+.bar-w{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.bar-fill{width:100%;border-radius:3px 3px 0 0;background:var(--gold);min-height:3px}
+.bar-day{font-size:9px;color:var(--muted)}
+.top-list{display:flex;flex-direction:column;gap:10px}
+.top-row{display:flex;align-items:center;gap:10px}
+.top-rank{width:16px;font-size:11px;font-weight:600;color:var(--muted)}
+.top-name{flex:1;font-size:13px;color:var(--text)}
+.top-bar-bg{flex:2;background:var(--surface2);border-radius:3px;height:5px;overflow:hidden}
+.top-bar-fill{height:100%;background:var(--gold);border-radius:3px}
+.top-count{width:28px;text-align:right;font-size:11px;color:var(--muted)}
+
+/* ── FILTER ROW ── */
+.filter-row{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.filter-row::-webkit-scrollbar{display:none}
+.fsel{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;outline:none}
+
+/* ── DASHED BTN ── */
+.dashed-btn{width:100%;background:transparent;border:1.5px dashed var(--border);color:var(--muted);padding:13px;border-radius:12px;font-family:'Jost',sans-serif;font-weight:400;font-size:13px;cursor:pointer;margin-top:8px;transition:all .2s}
+.dashed-btn:hover{border-color:var(--text);color:var(--text)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── SOUND INDICATOR ── */
+.sound-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;margin-right:6px;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+
+.hidden{display:none!important}
+.spacer{height:16px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-logo">Vrindavan</div>
+  <div class="login-sub">Admin Dashboard</div>
+  <div class="login-form">
+    <input class="l-input" id="loginEmail" type="email" placeholder="Email address" oninput="validateLogin()">
+    <input class="l-input" id="loginPass" type="password" placeholder="Password" oninput="validateLogin()" onkeydown="if(event.key==='Enter')doLogin()">
+    <div class="l-err" id="loginErr"></div>
+    <button class="l-btn" id="loginBtn" onclick="doLogin()" disabled>Sign In</button>
+    <div class="l-hint">
+      Demo: owner@vrindavan.com / Admin@123<br>
+      Staff: staff@vrindavan.com / Staff@123
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+  <div class="top-nav">
+    <div class="nav-brand">Vrindavan <span>Dashboard</span></div>
+    <div class="nav-right">
+      <div class="nav-role" id="roleLabel">OWNER</div>
+      <button class="logout-btn" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('overview',this)">Overview</button>
+    <button class="tab" onclick="showTab('orders',this)">Orders</button>
+    <button class="tab" onclick="showTab('tables',this)">Tables</button>
+    <button class="tab" onclick="showTab('menu',this)">Menu</button>
+    <button class="tab" onclick="showTab('revenue',this)">Revenue</button>
+    <button class="tab" onclick="showTab('analytics',this)">Analytics</button>
+    <button class="tab" onclick="showTab('qr',this)">QR Codes</button>
+    <button class="tab" onclick="showTab('themes',this)">Themes</button>
+    <button class="tab" onclick="showTab('staff',this)">Staff</button>
+  </div>
+
+  <div class="body">
+
+    <!-- OVERVIEW -->
+    <div id="tab-overview">
+      <div id="notifContainer"></div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">Today Revenue</div><div class="kpi-val" id="kpi-rev">₹0</div><div class="kpi-change" id="kpi-rev-ch">Live</div></div>
+        <div class="kpi"><div class="kpi-label">Orders</div><div class="kpi-val" id="kpi-ord">0</div><div class="kpi-change">Today</div></div>
+        <div class="kpi"><div class="kpi-label">Pending</div><div class="kpi-val" id="kpi-pend">0</div><div class="kpi-change warn" id="kpi-pend-ch">Active</div></div>
+        <div class="kpi"><div class="kpi-label">Tables Active</div><div class="kpi-val" id="kpi-tbl">0/20</div><div class="kpi-change warn">Live</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+        <span class="sound-dot"></span>
+        <span style="font-size:11px;color:var(--muted)">Live orders — auto-refreshing every 15s</span>
+      </div>
+      <div class="sec-h">Live Orders</div>
+      <div id="liveOrders"></div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="tab-orders" class="hidden">
+      <div class="sec-h">All Orders</div>
+      <div class="filter-row">
+        <select class="fsel" id="fStatus" onchange="renderAllOrders()">
+          <option value="">All Status</option>
+          <option value="new">New</option>
+          <option value="preparing">Preparing</option>
+          <option value="ready">Ready</option>
+          <option value="served">Served</option>
+          <option value="collected">Collected</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+        <select class="fsel" id="fTable" onchange="renderAllOrders()">
+          <option value="">All Tables</option>
+        </select>
+      </div>
+      <div id="allOrdersList"></div>
+    </div>
+
+    <!-- TABLES -->
+    <div id="tab-tables" class="hidden">
+      <div class="sec-h">Table Status</div>
+      <div class="tables-grid" id="tablesGrid"></div>
+      <div class="sec-h">Waiter Calls</div>
+      <div id="waiterCalls"><div style="font-size:13px;color:var(--muted)">No active waiter calls</div></div>
+    </div>
+
+    <!-- MENU -->
+    <div id="tab-menu" class="hidden">
+      <div class="sec-h">Manage Menu</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px">Price changes and stock toggles reflect instantly on customer menu.</p>
+      <div id="adminMenuList"></div>
+      <button class="dashed-btn" onclick="toast('Add Dish — connect to backend to enable')">+ Add New Dish</button>
+    </div>
+
+    <!-- REVENUE -->
+    <div id="tab-revenue" class="hidden">
+      <div class="sec-h">Today's Revenue</div>
+      <div class="rev-cards">
+        <div class="rev-card"><div class="rev-card-label">Projected</div><div class="rev-card-val rev-projected" id="rev-proj">₹0</div></div>
+        <div class="rev-card"><div class="rev-card-label">Collected</div><div class="rev-card-val rev-collected" id="rev-coll">₹0</div></div>
+        <div class="rev-card"><div class="rev-card-label">Pending</div><div class="rev-card-val rev-pending" id="rev-pend">₹0</div></div>
+      </div>
+      <div class="sec-h">Order-wise Breakdown</div>
+      <div id="revenueList"></div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div id="tab-analytics" class="hidden">
+      <div class="sec-h">Revenue This Week</div>
+      <div class="chart-wrap">
+        <div class="chart-lbl">Daily Revenue (₹)</div>
+        <div class="bars">
+          <div class="bar-w"><div class="bar-fill" style="height:45%"></div><div class="bar-day">Mon</div></div>
+          <div class="bar-w"><div class="bar-fill" style="height:62%"></div><div class="bar-day">Tue</div></div>
+          <div class="bar-w"><div class="bar-fill" style="height:55%"></div><div class="bar-day">Wed</div></div>
+          <div class="bar-w"><div class="bar-fill" style="height:80%"></div><div class="bar-day">Thu</div></div>
+          <div class="bar-w"><div class="bar-fill" style="height:100%"></div><div class="bar-day">Fri</div></div>
+          <div class="bar-w"><div class="bar-fill" style="height:90%"></div><div class="bar-day">Sat</div></div>
+          <div class="bar-w"><div class="bar-fill" style="height:68%"></div><div class="bar-day">Sun</div></div>
+        </div>
+      </div>
+      <div class="sec-h">Top Dishes</div>
+      <div class="chart-wrap">
+        <div class="top-list">
+          <div class="top-row"><div class="top-rank">1</div><div class="top-name">Paneer Butter Masala</div><div class="top-bar-bg"><div class="top-bar-fill" style="width:95%"></div></div><div class="top-count">142</div></div>
+          <div class="top-row"><div class="top-rank">2</div><div class="top-name">Masala Dosa</div><div class="top-bar-bg"><div class="top-bar-fill" style="width:82%"></div></div><div class="top-count">123</div></div>
+          <div class="top-row"><div class="top-rank">3</div><div class="top-name">Dal Makhani</div><div class="top-bar-bg"><div class="top-bar-fill" style="width:70%"></div></div><div class="top-count">105</div></div>
+          <div class="top-row"><div class="top-rank">4</div><div class="top-name">Mango Lassi</div><div class="top-bar-bg"><div class="top-bar-fill" style="width:58%"></div></div><div class="top-count">90</div></div>
+          <div class="top-row"><div class="top-rank">5</div><div class="top-name">Gulab Jamun</div><div class="top-bar-bg"><div class="top-bar-fill" style="width:46%"></div></div><div class="top-count">72</div></div>
+        </div>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kpi-label">New Customers</div><div class="kpi-val">234</div><div class="kpi-change">This month</div></div>
+        <div class="kpi"><div class="kpi-label">Returning</div><div class="kpi-val">89</div><div class="kpi-change warn">22% loyalty</div></div>
+      </div>
+    </div>
+
+    <!-- QR CODES -->
+    <div id="tab-qr" class="hidden">
+      <div class="sec-h">QR Code Generator</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Each table has a unique QR code. When scanned, it opens the menu directly for that table — no table selection needed for customers.</p>
+      <div style="margin-bottom:16px">
+        <label style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px">Your Website URL</label>
+        <input id="siteUrl" style="background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-family:'Jost',sans-serif;font-size:13px;width:100%;outline:none" placeholder="https://yoursite.com" value="https://vrindavan.vercel.app" oninput="renderQRGrid()">
+      </div>
+      <div class="qr-grid" id="qrGrid"></div>
+    </div>
+
+    <!-- THEMES -->
+    <div id="tab-themes" class="hidden">
+      <div class="sec-h">Festival Themes</div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Switch your menu's look for any festival. Customers see the update instantly — no reload needed.</p>
+      <div class="theme-grid">
+        <div class="theme-card active" id="th-default" onclick="selectTheme('default','Default')">
+          <div class="active-pip"></div>
+          <div class="theme-preview" style="background:#1A1A18">🍽️</div>
+          <div class="theme-name">Default</div><div class="theme-desc">Clean & minimal</div>
+        </div>
+        <div class="theme-card" id="th-diwali" onclick="selectTheme('diwali','Diwali')">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#1A0800,#3D1500)">🪔</div>
+          <div class="theme-name">Diwali</div><div class="theme-desc">Gold & warm</div>
+        </div>
+        <div class="theme-card" id="th-holi" onclick="selectTheme('holi','Holi')">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#FCE4EC,#F3E5F5)">🎨</div>
+          <div class="theme-name">Holi</div><div class="theme-desc">Colorful & bright</div>
+        </div>
+        <div class="theme-card" id="th-navratri" onclick="selectTheme('navratri','Navratri')">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#FFF3E0,#FCE4EC)">🌺</div>
+          <div class="theme-name">Navratri</div><div class="theme-desc">Red & festive</div>
+        </div>
+        <div class="theme-card" id="th-christmas" onclick="selectTheme('christmas','Christmas')">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#E8F5E9,#FFEBEE)">🎄</div>
+          <div class="theme-name">Christmas</div><div class="theme-desc">Merry & bright</div>
+        </div>
+        <div class="theme-card" id="th-newyear" onclick="selectTheme('newyear','New Year')">
+          <div class="theme-preview" style="background:linear-gradient(135deg,#E8EAF6,#EDE7F6)">🥂</div>
+          <div class="theme-name">New Year</div><div class="theme-desc">Celebratory</div>
+        </div>
+      </div>
+      <button class="dashed-btn" style="margin-top:12px" onclick="toast('Custom theme creator — full version')">+ Custom Theme</button>
+    </div>
+
+    <!-- STAFF -->
+    <div id="tab-staff" class="hidden">
+      <div class="sec-h">Staff Accounts</div>
+      <div class="staff-card">
+        <div class="staff-info"><div class="staff-name">Ramesh Kumar</div><div class="staff-role">Waiter · Table 1-10</div></div>
+        <span class="staff-status staff-online">● Online</span>
+      </div>
+      <div class="staff-card">
+        <div class="staff-info"><div class="staff-name">Sunita Devi</div><div class="staff-role">Waiter · Table 11-20</div></div>
+        <span class="staff-status staff-offline">Offline</span>
+      </div>
+      <div class="staff-card">
+        <div class="staff-info"><div class="staff-name">Kitchen Screen</div><div class="staff-role">Kitchen Display</div></div>
+        <span class="staff-status staff-online">● Online</span>
+      </div>
+      <button class="dashed-btn" onclick="toast('Add staff account — connect to backend')">+ Add Staff</button>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script>
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
+
+// ── DEMO DATA ──
+let adminToken = null;
+let adminRole = 'owner';
+let liveOrders = [
+  {id:47,table:5,customer:'Ramesh K.',mobile:'98765 43210',status:'new',total:920,items:'Paneer Butter Masala ×2, Garlic Naan ×3, Mango Lassi ×2',instructions:'',time:new Date(Date.now()-3*60000)},
+  {id:46,table:12,customer:'Priya M.',mobile:'91234 56780',status:'preparing',total:640,items:'Dal Makhani ×1, Jeera Rice ×2, Gulab Jamun ×4',instructions:'Less spicy please',time:new Date(Date.now()-12*60000)},
+  {id:45,table:3,customer:'Anil S.',mobile:'99887 76655',status:'ready',total:380,items:'Masala Dosa ×2, Filter Coffee ×2',instructions:'',time:new Date(Date.now()-18*60000)},
+  {id:44,table:7,customer:'Sunita R.',mobile:'87654 32109',status:'served',total:580,items:'Shahi Paneer ×1, Garlic Naan ×2, Mango Lassi ×1',instructions:'',time:new Date(Date.now()-35*60000)},
+  {id:43,table:2,customer:'Vikram P.',mobile:'76543 21098',status:'collected',total:440,items:'Aloo Tikki ×2, Masala Dosa ×1, Chaas ×2',instructions:'',time:new Date(Date.now()-55*60000)},
+];
+
+let tableStatus = {};
+for (let i=1;i<=20;i++) tableStatus[i] = {occupied:false,waiter:false};
+[3,5,7,12,15].forEach(t => tableStatus[t].occupied = true);
+tableStatus[8].waiter = true;
+
+let waiterCallsList = [{table:8,time:new Date(Date.now()-2*60000),customer:'Mohan Lal'}];
+
+const menuItems = [
+  {id:1,name:'Paneer Tikka',cat:'Starters',price:280,inStock:true,isVeg:true,lowStock:false},
+  {id:2,name:'Hara Bhara Kabab',cat:'Starters',price:220,inStock:true,isVeg:true,lowStock:false},
+  {id:3,name:'Dahi Puri',cat:'Starters',price:180,inStock:false,isVeg:true,lowStock:false},
+  {id:4,name:'Aloo Tikki',cat:'Starters',price:160,inStock:true,isVeg:true,lowStock:true},
+  {id:5,name:'Paneer Butter Masala',cat:'Main Course',price:320,inStock:true,isVeg:true,lowStock:false},
+  {id:6,name:'Dal Makhani',cat:'Main Course',price:260,inStock:true,isVeg:true,lowStock:false},
+  {id:7,name:'Shahi Paneer',cat:'Main Course',price:340,inStock:true,isVeg:true,lowStock:false},
+  {id:8,name:'Masala Dosa',cat:'Main Course',price:180,inStock:true,isVeg:true,lowStock:false},
+  {id:9,name:'Veg Biryani',cat:'Main Course',price:280,inStock:true,isVeg:true,lowStock:false},
+  {id:10,name:'Garlic Naan',cat:'Breads',price:60,inStock:true,isVeg:true,lowStock:false},
+  {id:11,name:'Tandoori Roti',cat:'Breads',price:40,inStock:true,isVeg:true,lowStock:false},
+  {id:12,name:'Mango Lassi',cat:'Beverages',price:120,inStock:true,isVeg:true,lowStock:false},
+  {id:13,name:'Masala Chaas',cat:'Beverages',price:80,inStock:true,isVeg:true,lowStock:false},
+  {id:14,name:'Gulab Jamun',cat:'Desserts',price:120,inStock:true,isVeg:true,lowStock:false},
+  {id:15,name:'Ras Malai',cat:'Desserts',price:160,inStock:true,isVeg:true,lowStock:false},
+];
+
+// ── LOGIN ──
+function validateLogin() {
+  const e = document.getElementById('loginEmail').value;
+  const p = document.getElementById('loginPass').value;
+  document.getElementById('loginBtn').disabled = !(e && p.length >= 4);
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  const err = document.getElementById('loginErr');
+  const btn = document.getElementById('loginBtn');
+
+  btn.disabled = true;
+  btn.textContent = 'Signing in...';
+  err.style.display = 'none';
+
+  try {
+    const res = await fetch(`${API}/admin/auth/login`, {
+      method: 'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: pass})
+    });
+    const data = await res.json();
+    if (data.success) {
+      adminToken = data.token;
+      adminRole = data.role;
+      document.getElementById('roleLabel').textContent = adminRole.toUpperCase();
+      openDashboard();
+      return;
+    } else {
+      err.textContent = data.error || 'Invalid credentials';
+      err.style.display = 'block';
+    }
+  } catch {
+    // Demo mode
+    if ((email === 'owner@vrindavan.com' && pass === 'Admin@123') ||
+        (email === 'staff@vrindavan.com' && pass === 'Staff@123')) {
+      adminRole = email.includes('owner') ? 'owner' : 'staff';
+      adminToken = 'demo';
+      document.getElementById('roleLabel').textContent = adminRole.toUpperCase();
+      openDashboard();
+      return;
+    }
+    err.textContent = 'Invalid credentials';
+    err.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Sign In';
+}
+
+function openDashboard() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'block';
+  initDashboard();
+}
+
+function doLogout() {
+  adminToken = null;
+  document.getElementById('adminApp').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('loginPass').value = '';
+  document.getElementById('loginBtn').disabled = true;
+  document.getElementById('loginBtn').textContent = 'Sign In';
+}
+
+// ── DASHBOARD INIT ──
+function initDashboard() {
+  updateKPIs();
+  renderLiveOrders();
+  renderTablesGrid();
+  renderAdminMenu();
+  renderAllOrders();
+  renderRevenue();
+  renderQRGrid();
+  populateTableFilter();
+  startPolling();
+}
+
+// ── POLLING (simulate real-time) ──
+let pollTimer;
+function startPolling() {
+  pollTimer = setInterval(() => {
+    updateKPIs();
+    renderLiveOrders();
+    renderTablesGrid();
+    renderRevenue();
+    // Simulate new order occasionally
+    if (Math.random() < 0.08) simulateNewOrder();
+  }, 15000);
+}
+
+function simulateNewOrder() {
+  const tables = [1,4,6,9,11,13,16,17,18,19,20];
+  const tbl = tables[Math.floor(Math.random()*tables.length)];
+  const dishes = ['Paneer Tikka','Masala Dosa','Dal Makhani','Gulab Jamun','Mango Lassi'];
+  const dish = dishes[Math.floor(Math.random()*dishes.length)];
+  const newOrd = {
+    id: Math.max(...liveOrders.map(o=>o.id))+1,
+    table: tbl, customer: 'New Customer', mobile:'—',
+    status:'new', total: Math.floor(Math.random()*500+150),
+    items: `${dish} ×${Math.ceil(Math.random()*2)}`,
+    instructions:'', time: new Date()
+  };
+  liveOrders.unshift(newOrd);
+  tableStatus[tbl] = {occupied:true, waiter:false};
+  showNotif(`New order from Table ${tbl} — ${dish}`);
+  playNotifSound();
+  updateKPIs();
+  renderLiveOrders();
+  renderTablesGrid();
+  renderRevenue();
+}
+
+// ── NOTIFICATION SOUND ──
+function playNotifSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.setValueAtTime(660, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+  } catch {}
+}
+
+// ── NOTIFICATIONS ──
+function showNotif(msg) {
+  const container = document.getElementById('notifContainer');
+  const div = document.createElement('div');
+  div.className = 'notif-banner';
+  div.innerHTML = `<div><span class="sound-dot"></span><span class="notif-text">${msg}</span></div><div style="display:flex;align-items:center;gap:8px"><span class="notif-time">Just now</span><button class="notif-dismiss" onclick="this.closest('.notif-banner').remove()">×</button></div>`;
+  container.insertBefore(div, container.firstChild);
+  setTimeout(() => div.remove(), 10000);
+}
+
+// ── KPIs ──
+function updateKPIs() {
+  const projected = liveOrders.filter(o=>!['cancelled'].includes(o.status)).reduce((a,b)=>a+b.total,0);
+  const collected = liveOrders.filter(o=>o.status==='collected').reduce((a,b)=>a+b.total,0);
+  const pending = liveOrders.filter(o=>['new','preparing','ready','served'].includes(o.status)).length;
+  const activeTables = Object.values(tableStatus).filter(t=>t.occupied).length;
+
+  document.getElementById('kpi-rev').textContent = `₹${projected.toLocaleString('en-IN')}`;
+  document.getElementById('kpi-ord').textContent = liveOrders.length;
+  document.getElementById('kpi-pend').textContent = pending;
+  document.getElementById('kpi-tbl').textContent = `${activeTables}/20`;
+}
+
+// ── ORDER TIMER ──
+function getTimerInfo(orderTime) {
+  const mins = Math.floor((Date.now() - orderTime.getTime()) / 60000);
+  let cls = 'ok', label = `${mins}m ago`;
+  if (mins > 30) { cls = 'late'; label = `⚠ ${mins}m`; }
+  else if (mins > 15) { cls = 'warn'; label = `${mins}m`; }
+  return {cls, label};
+}
+
+// ── RENDER LIVE ORDERS ──
+const statusMap = {new:'s-new',preparing:'s-preparing',ready:'s-ready',served:'s-served',collected:'s-collected',cancelled:'s-cancelled'};
+const statusLabel = {new:'New',preparing:'Preparing',ready:'Ready to Serve',served:'Served',collected:'Collected',cancelled:'Cancelled'};
+
+function renderLiveOrders() {
+  const container = document.getElementById('liveOrders');
+  const active = liveOrders.filter(o=>!['collected','cancelled'].includes(o.status));
+  if (!active.length) { container.innerHTML = '<div style="font-size:13px;color:var(--muted);text-align:center;padding:24px">No active orders</div>'; return; }
+
+  let html = '';
+  active.forEach(o => {
+    const timer = getTimerInfo(o.time);
+    const isNew = (Date.now() - o.time.getTime()) < 60000;
+    html += `
+      <div class="order-card${isNew?' new-order':''}">
+        <div class="oc-top">
+          <div>
+            <div class="oc-id">#VR-${String(o.id).padStart(4,'0')}</div>
+            <div class="oc-meta">Table ${o.table} · ${o.customer} · ${o.mobile}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+            <span class="status ${statusMap[o.status]}">${statusLabel[o.status]}</span>
+            <span class="oc-timer ${timer.cls}">${timer.label}</span>
+          </div>
+        </div>
+        <div class="oc-items">${o.items}</div>
+        ${o.instructions?`<div class="oc-instr">📝 ${o.instructions}</div>`:''}
+        <div class="oc-bottom">
+          <div class="oc-total">₹${o.total}</div>
+          <div class="oc-acts">
+            ${o.status==='new'?`<button class="oc-btn ok" onclick="updateOrderStatus(${o.id},'preparing')">Start Preparing</button>`:''}
+            ${o.status==='preparing'?`<button class="oc-btn ok" onclick="updateOrderStatus(${o.id},'ready')">Mark Ready</button>`:''}
+            ${o.status==='ready'?`<button class="oc-btn ok" onclick="updateOrderStatus(${o.id},'served')">Mark Served</button>`:''}
+            ${o.status==='served'?`<button class="oc-btn ok" onclick="updateOrderStatus(${o.id},'collected')">Cash Collected ✓</button>`:''}
+            ${['new','preparing'].includes(o.status)?`<button class="oc-btn danger" onclick="updateOrderStatus(${o.id},'cancelled')">Cancel</button>`:''}
+          </div>
+        </div>
+      </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function updateOrderStatus(id, status) {
+  const order = liveOrders.find(o=>o.id===id);
+  if (!order) return;
+  order.status = status;
+  if (status === 'collected' || status === 'cancelled') {
+    if (status === 'collected') tableStatus[order.table] = {occupied:false,waiter:false};
+  }
+  renderLiveOrders();
+  renderAllOrders();
+  renderTablesGrid();
+  updateKPIs();
+  renderRevenue();
+  toast(`Order #VR-${String(id).padStart(4,'0')} → ${statusLabel[status]} ✓`);
+}
+
+// ── ALL ORDERS ──
+function populateTableFilter() {
+  const sel = document.getElementById('fTable');
+  for (let i=1;i<=20;i++) sel.add(new Option(`Table ${i}`, i));
+}
+
+function renderAllOrders() {
+  const statusFilter = document.getElementById('fStatus')?.value || '';
+  const tableFilter = document.getElementById('fTable')?.value || '';
+  let orders = [...liveOrders];
+  if (statusFilter) orders = orders.filter(o=>o.status===statusFilter);
+  if (tableFilter) orders = orders.filter(o=>String(o.table)===tableFilter);
+
+  if (!orders.length) { document.getElementById('allOrdersList').innerHTML = '<div style="font-size:13px;color:var(--muted);padding:20px 0">No orders found</div>'; return; }
+
+  let html = '';
+  orders.forEach(o => {
+    const timer = getTimerInfo(o.time);
+    html += `
+      <div class="order-card">
+        <div class="oc-top">
+          <div><div class="oc-id">#VR-${String(o.id).padStart(4,'0')}</div><div class="oc-meta">Table ${o.table} · ${o.customer} · ${o.mobile}</div></div>
+          <span class="status ${statusMap[o.status]}">${statusLabel[o.status]}</span>
+        </div>
+        <div class="oc-items">${o.items}</div>
+        ${o.instructions?`<div class="oc-instr">📝 ${o.instructions}</div>`:''}
+        <div class="oc-bottom"><div class="oc-total">₹${o.total}</div><span class="oc-timer ${timer.cls}" style="font-size:11px">${timer.label}</span></div>
+      </div>`;
+  });
+  document.getElementById('allOrdersList').innerHTML = html;
+}
+
+// ── TABLES ──
+function renderTablesGrid() {
+  const grid = document.getElementById('tablesGrid');
+  let html = '';
+  for (let i=1;i<=20;i++) {
+    const s = tableStatus[i];
+    const cls = s.waiter?'waiter-needed':s.occupied?'occupied':'';
+    const statusTxt = s.waiter?'Waiter Needed':s.occupied?'Occupied':'Free';
+    const statusCls = s.waiter?'wait':s.occupied?'occ':'';
+    html += `<div class="tbl-card ${cls}"><div class="tbl-num">${i}</div><div class="tbl-status ${statusCls}">${statusTxt}</div></div>`;
+  }
+  grid.innerHTML = html;
+
+  const wc = document.getElementById('waiterCalls');
+  if (!waiterCallsList.length) { wc.innerHTML = '<div style="font-size:13px;color:var(--muted)">No active waiter calls</div>'; return; }
+  let wcHtml = '';
+  waiterCallsList.forEach((c,i) => {
+    const mins = Math.floor((Date.now()-c.time.getTime())/60000);
+    wcHtml += `<div class="order-card" style="border-color:var(--red)">
+      <div class="oc-top"><div><div class="oc-id">Table ${c.table}</div><div class="oc-meta">${c.customer} · ${mins}m ago</div></div><span class="status s-new">Waiting</span></div>
+      <div class="oc-bottom"><div></div><button class="oc-btn ok" onclick="dismissWaiterCall(${i})">Responded ✓</button></div>
+    </div>`;
+  });
+  wc.innerHTML = wcHtml;
+}
+
+function dismissWaiterCall(idx) {
+  const call = waiterCallsList[idx];
+  if (call) tableStatus[call.table].waiter = false;
+  waiterCallsList.splice(idx,1);
+  renderTablesGrid();
+  toast('Waiter call dismissed ✓');
+}
+
+// ── MENU ADMIN ──
+function renderAdminMenu() {
+  let html = '';
+  menuItems.forEach(d => {
+    html += `
+      <div class="ma-card">
+        <div class="ma-dot veg"></div>
+        <div class="ma-info">
+          <div class="ma-cat">${d.cat}</div>
+          <div class="ma-name">${d.name}${d.lowStock?` <span class="low-stock-warn">⚠ Low Stock</span>`:''}</div>
+          <div class="price-row">
+            <span class="price-sym">₹</span>
+            <input class="price-input" type="number" value="${d.price}" id="p-${d.id}" min="1">
+            <button class="save-btn" onclick="savePrice(${d.id})">Save</button>
+          </div>
+        </div>
+        <div class="ma-right">
+          <label class="toggle">
+            <input type="checkbox" ${d.inStock?'checked':''} onchange="toggleStock(${d.id},this.checked)">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+          <div class="toggle-lbl" id="stk-${d.id}">${d.inStock?'In Stock':'Sold Out'}</div>
+        </div>
+      </div>`;
+  });
+  document.getElementById('adminMenuList').innerHTML = html;
+}
+
+function savePrice(id) {
+  const d = menuItems.find(x=>x.id===id);
+  const val = parseInt(document.getElementById('p-'+id).value);
+  if (!d||!val||val<1) { toast('Enter a valid price'); return; }
+  d.price = val;
+  toast(`✓ ${d.name} price updated to ₹${val}`);
+}
+
+function toggleStock(id, inStock) {
+  const d = menuItems.find(x=>x.id===id);
+  if (!d) return;
+  d.inStock = inStock;
+  document.getElementById('stk-'+id).textContent = inStock?'In Stock':'Sold Out';
+  toast(`${d.name} → ${inStock?'In Stock ✓':'Sold Out'}`);
+}
+
+// ── REVENUE ──
+function renderRevenue() {
+  const projected = liveOrders.filter(o=>o.status!=='cancelled').reduce((a,b)=>a+b.total,0);
+  const collected = liveOrders.filter(o=>o.status==='collected').reduce((a,b)=>a+b.total,0);
+  const pending = projected - collected;
+
+  document.getElementById('rev-proj').textContent = `₹${projected.toLocaleString('en-IN')}`;
+  document.getElementById('rev-coll').textContent = `₹${collected.toLocaleString('en-IN')}`;
+  document.getElementById('rev-pend').textContent = `₹${pending.toLocaleString('en-IN')}`;
+
+  let html = '';
+  liveOrders.filter(o=>o.status!=='cancelled').forEach(o => {
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-size:13px;font-weight:500;color:var(--text)">Table ${o.table} · ${o.customer}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${o.items.split(',')[0]}${o.items.includes(',')?' + more':''}</div></div>
+      <div style="text-align:right"><div style="font-size:14px;font-weight:600;color:var(--text)">₹${o.total}</div><span class="status ${statusMap[o.status]}" style="margin-top:4px;display:inline-block">${statusLabel[o.status]}</span></div>
+    </div>`;
+  });
+  document.getElementById('revenueList').innerHTML = html || '<div style="font-size:13px;color:var(--muted)">No orders yet</div>';
+}
+
+// ── QR CODE GENERATOR ──
+function renderQRGrid() {
+  const base = document.getElementById('siteUrl').value || 'https://vrindavan.vercel.app';
+  const grid = document.getElementById('qrGrid');
+  let html = '';
+  for (let i=1;i<=20;i++) {
+    const url = `${base}?table=${i}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(url)}&bgcolor=1A1A18&color=F0EDE8&margin=8`;
+    html += `
+      <div class="qr-card">
+        <div class="qr-table-label">Table ${i}</div>
+        <div class="qr-box">
+          <img src="${qrUrl}" width="100" height="100" loading="lazy" style="border-radius:6px" onerror="this.parentElement.innerHTML='<div class=\\'qr-placeholder\\'>📱</div><div style=\\'font-size:10px;color:var(--muted)\\'>QR Preview</div>'">
+        </div>
+        <button class="qr-download" onclick="downloadQR(${i},'${encodeURIComponent(url)}')">Download Table ${i}</button>
+      </div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function downloadQR(tableNum, encodedUrl) {
+  const url = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodedUrl}&bgcolor=ffffff&color=141412&margin=20`;
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `vrindavan-table-${tableNum}-qr.png`;
+  a.target = '_blank';
+  a.click();
+  toast(`QR Code for Table ${tableNum} downloading...`);
+}
+
+// ── THEMES ──
+function selectTheme(key, name) {
+  document.querySelectorAll('.theme-card').forEach(c => {
+    c.classList.remove('active');
+    const p = c.querySelector('.active-pip');
+    if (p) p.remove();
+  });
+  const card = document.getElementById('th-'+key);
+  card.classList.add('active');
+  const pip = document.createElement('div'); pip.className = 'active-pip'; card.appendChild(pip);
+  toast(`✓ ${name} theme applied to customer menu`);
+}
+
+// ── TABS ──
+function showTab(name, btn) {
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ── TOAST ──
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toastEl');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+}
+
+function hidden(el) { el.classList.add('hidden'); }
+</script>
+</body>
+</html>

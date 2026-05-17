@@ -737,34 +737,62 @@ function openCart() {
   openSheet('cartOverlay');
 }
 try {
+  async function placeOrder() {
 
-  const res = await fetch(`${API}/orders`, {
-    method: 'POST',
-    headers: {
-      'Content-Type':'application/json',
-      'Authorization':`Bearer ${session?.token}`
-    },
-    body: JSON.stringify({
-      items,
-      special_instructions: instructions,
-      payment_method:'cod'
-    })
-  });
-  const data = await res.json();
+  const count = Object.values(cart).reduce((a,b)=>a+b.qty,0);
 
-if (data.success) {
+  if (count === 0) return;
 
-  showOrderSuccess(data.order_id);
+  const btn = document.getElementById('placeOrderBtn');
 
-  return;
+  btn.disabled = true;
 
-}
+  btn.textContent = lang === 'hi'
+    ? 'ऑर्डर हो रहा है...'
+    : 'Placing order...';
 
-} catch(error) {
+  const items = Object.entries(cart).map(([id,{qty}]) => ({
+    id: parseInt(id),
+    qty
+  }));
 
-  console.error(error);
+  const instructions =
+    document.getElementById('specialInstr').value.trim();
+
+  try {
+
+    const res = await fetch(`${API}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':'application/json',
+        'Authorization':`Bearer ${session?.token}`
+      },
+      body: JSON.stringify({
+        items,
+        special_instructions: instructions,
+        payment_method:'cod'
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+
+      showOrderSuccess(data.order_id);
+
+      return;
+
+    }
+
+  } catch(error) {
+
+    console.error(error);
 
   }
+
+  }
+
+  
   // Demo mode
   orderCounter++;
   showOrderSuccess(orderCounter);

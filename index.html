@@ -750,32 +750,21 @@ try {
       payment_method:'cod'
     })
   });
-
   const data = await res.json();
 
-  if (data.success) {
+if (data.success) {
 
-    await placeRealtimeOrder({
-      customerName: session?.customer_name || "Guest",
-      table: session?.table || "Unknown",
-      items: items,
-      instructions: instructions,
-      orderId: data.order_id,
-      status: "pending"
-    });
+  showOrderSuccess(data.order_id);
 
-    showOrderSuccess(data.order_id);
+  return;
 
-    return;
-
-  }
+}
 
 } catch(error) {
 
   console.error(error);
 
-  }}
-
+  }
   // Demo mode
   orderCounter++;
   showOrderSuccess(orderCounter);
@@ -867,44 +856,6 @@ function toast(msg) {
 }
 
 init();
-</script>
-<script type="module">
-
-import { db } from "./firebase/firebase-config.js";
-
-import {
-  collection,
-  addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-window.placeRealtimeOrder = async function(orderData){
-
-  try{
-
-    const docRef = await addDoc(
-      collection(db, "orders"),
-      {
-        ...orderData,
-        status: "pending",
-        createdAt: serverTimestamp()
-      }
-    );
-
-    alert("Order placed successfully!");
-
-    console.log("Order ID:", docRef.id);
-
-  }catch(error){
-
-    console.error(error);
-
-    alert("Order failed");
-
-  }
-
-}
-
 </script>
 </body>
 </html>

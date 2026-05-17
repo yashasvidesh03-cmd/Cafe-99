@@ -282,12 +282,28 @@ body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-he
       <div class="nav-tagline" id="lbl-nav-tagline">Pure Veg · Est. 1995</div>
     </div>
     <div class="nav-actions">
-      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
-      <button class="icon-btn" id="langToggleBtn" onclick="toggleLang()" style="font-size:11px;padding:0 8px;width:auto;">EN</button>
-      <button class="cart-pill" onclick="openCart()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-        <span id="lbl-cart">Cart</span> <div class="cart-badge" id="navCount">0</div>
-      </button>
+
+  <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+
+  <button class="icon-btn" id="langToggleBtn" onclick="toggleLang()" style="font-size:11px;padding:0 8px;width:auto;">EN</button>
+
+  <button class="cart-pill" onclick="openCart()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+      <line x1="3" y1="6" x2="21" y2="6"/>
+      <path d="M16 10a4 4 0 01-8 0"/>
+    </svg>
+
+    <span id="lbl-cart">Cart</span>
+    <div class="cart-badge" id="navCount">0</div>
+  </button>
+
+  <a href="/admin" class="icon-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">A</a>
+
+  <a href="/kitchen" class="icon-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">K</a>
+
+  <a href="/waiter" class="icon-btn" style="text-decoration:none;display:flex;align-items:center;justify-content:center;">W</a>
+
     </div>
   </nav>
 

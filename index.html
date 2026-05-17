@@ -736,30 +736,45 @@ function openCart() {
   applyLang();
   openSheet('cartOverlay');
 }
+try {
 
-async function placeOrder() {
-  const count = Object.values(cart).reduce((a,b)=>a+b.qty,0);
-  if (count === 0) return;
+  const res = await fetch(`${API}/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type':'application/json',
+      'Authorization':`Bearer ${session?.token}`
+    },
+    body: JSON.stringify({
+      items,
+      special_instructions: instructions,
+      payment_method:'cod'
+    })
+  });
 
-  const btn = document.getElementById('placeOrderBtn');
-  btn.disabled = true;
-  btn.textContent = lang === 'hi' ? 'ऑर्डर हो रहा है...' : 'Placing order...';
+  const data = await res.json();
 
-  const items = Object.entries(cart).map(([id,{qty}]) => ({id:parseInt(id), qty}));
-  const instructions = document.getElementById('specialInstr').value.trim();
+  if (data.success) {
 
-  try {
-    const res = await fetch(`${API}/orders`, {
-      method: 'POST',
-      headers: {'Content-Type':'application/json','Authorization':`Bearer ${session?.token}`},
-      body: JSON.stringify({items, special_instructions: instructions, payment_method:'cod'})
+    await placeRealtimeOrder({
+      customerName: session?.customer_name || "Guest",
+      table: session?.table || "Unknown",
+      items: items,
+      instructions: instructions,
+      orderId: data.order_id,
+      status: "pending"
     });
-    const data = await res.json();
-    if (data.success) {
-      showOrderSuccess(data.order_id);
-      return;
-    }
-  } catch {}
+
+    showOrderSuccess(data.order_id);
+
+    return;
+
+  }
+
+} catch(error) {
+
+  console.error(error);
+
+  }}
 
   // Demo mode
   orderCounter++;
@@ -853,5 +868,46 @@ function toast(msg) {
 
 init();
 </script>
+<script type="module">
+
+import { db } from "./firebase/firebase-config.js";
+
+import {
+  collection,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+window.placeRealtimeOrder = async function(orderData){
+
+  try{
+
+    const docRef = await addDoc(
+      collection(db, "orders"),
+      {
+        ...orderData,
+        status: "pending",
+        createdAt: serverTimestamp()
+      }
+    );
+
+    alert("Order placed successfully!");
+
+    console.log("Order ID:", docRef.id);
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Order failed");
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>
 </body>
 </html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Firebase Test</title>
+</head>
+<body>
+
+<h1>Firebase Connected ✅</h1>
+
+<button onclick="testFirebase()">
+  Test Firestore
+</button>
+
+<script type="module">
+
+import { db } from "./firebase/firebase-config.js";
+
+import {
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+window.testFirebase = async function(){
+
+  try{
+
+    await addDoc(
+      collection(db, "test"),
+      {
+        message: "Firebase working"
+      }
+    );
+
+    alert("Firestore Connected!");
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Firebase Error");
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

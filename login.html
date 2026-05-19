@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Restaurant Login</title>
+  <style>
+    body{
+      font-family:Arial;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      background:#111;
+      color:white;
+    }
+
+    .box{
+      width:320px;
+      padding:24px;
+      background:#1e1e1e;
+      border-radius:12px;
+    }
+
+    input{
+      width:100%;
+      padding:12px;
+      margin-top:10px;
+      border:none;
+      border-radius:8px;
+    }
+
+    button{
+      width:100%;
+      padding:12px;
+      margin-top:16px;
+      border:none;
+      border-radius:8px;
+      background:#f59e0b;
+      color:white;
+      font-weight:bold;
+      cursor:pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="box">
+
+  <h2>Staff Login</h2>
+
+  <input type="email" id="email" placeholder="Email">
+
+  <input type="password" id="password" placeholder="Password">
+
+  <button onclick="login()">
+    Login
+  </button>
+
+</div>
+
+<script type="module">
+
+import { auth, db } from "./firebase/firebase-config.js";
+
+import {
+  signInWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+window.login = async function(){
+
+  const email =
+    document.getElementById("email").value;
+
+  const password =
+    document.getElementById("password").value;
+
+  try{
+
+    const userCred =
+      await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+    const uid = userCred.user.uid;
+
+    const userDoc =
+      await getDoc(doc(db, "users", uid));
+
+    if(!userDoc.exists()){
+
+      alert("No role assigned");
+
+      return;
+
+    }
+
+    const userData = userDoc.data();
+
+    if(userData.role === "admin"){
+
+      location.href = "/admin/";
+
+    }
+
+    else if(userData.role === "kitchen"){
+
+      location.href = "/kitchen/";
+
+    }
+
+    else if(userData.role === "waiter"){
+
+      location.href = "/waiter/";
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    alert("Login failed");
+
+  }
+
+}
+
+</script>
+
+</body>
+</html>

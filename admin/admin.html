@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vrindavan — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0F0F0E;--surface:#1A1A18;--surface2:#222220;--border:#2A2A28;--text:#F0EDE8;--muted:#6A6A68;--accent:#C8922A;--gold:#D4A43A;--green:#3D9B65;--red:#C84040;--blue:#3A7BD5;--warn:#E8B84B}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--text);margin-bottom:4px;text-align:center}
+.login-sub{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+.login-form{width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px}
+.l-input{background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:13px 16px;border-radius:12px;font-family:'Jost',sans-serif;font-size:14px;outline:none;transition:border-color .2s;width:100%}
+.l-input:focus{border-color:var(--accent)}
+.l-input::placeholder{color:var(--muted)}
+.l-btn{background:var(--accent);color:#fff;border:none;padding:14px;border-radius:12px;font-family:'Jost',sans-serif;font-weight:500;font-size:15px;cursor:pointer;transition:opacity .2s}
+.l-btn:hover{opacity:.88}
+.l-btn:disabled{opacity:.4;cursor:not-allowed}
+.l-err{font-size:12px;color:var(--red);display:none;text-align:center}
+.l-hint{font-size:11px;color:var(--muted);text-align:center;line-height:1.6}
+
+/* MAIN */
+#adminApp{display:none}
+.top-nav{background:var(--surface);height:52px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;border-bottom:1px solid var(--border)}
+.nav-brand{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:600;color:var(--text)}
+.nav-brand span{font-family:'Jost',sans-serif;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-left:8px}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-role{background:var(--surface2);border:1px solid var(--border);color:var(--gold);padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;letter-spacing:.5px}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;cursor:pointer;transition:all .2s}
+.logout-btn:hover{color:var(--text);border-color:var(--text)}
+
+/* TABS */
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);display:flex;overflow-x:auto;scrollbar-width:none;padding:0 8px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:13px 14px;border:none;background:transparent;font-family:'Jost',sans-serif;font-size:12px;font-weight:400;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .18s}
+.tab.active{color:var(--text);border-bottom-color:var(--gold);font-weight:500}
+
+/* BODY */
+.body{padding:16px}
+
+/* LIVE */
+.live-row{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:11px;color:var(--green);font-weight:600}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:blink 1.3s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px}
+.kpi-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:var(--text);line-height:1;margin-bottom:4px}
+.kpi-change{font-size:11px;color:var(--green)}
+.sec-h{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+/* ORDER CARDS */
+.order-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;transition:border-color .2s}
+.order-card.new-order{border-color:var(--accent)}
+.oc-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.oc-id{font-weight:600;font-size:14px;color:var(--text)}
+.oc-meta{font-size:11px;color:var(--muted);margin-top:2px}
+.status{font-size:10px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;padding:4px 9px;border-radius:20px}
+.s-new{background:rgba(200,146,42,.15);color:var(--gold)}
+.s-preparing{background:rgba(58,123,213,.15);color:var(--blue)}
+.s-ready{background:rgba(61,155,101,.15);color:var(--green)}
+.s-served{background:rgba(156,39,176,.15);color:#AB47BC}
+.s-collected{background:rgba(61,155,101,.1);color:var(--green)}
+.s-cancelled{background:rgba(200,64,64,.15);color:var(--red)}
+.oc-items{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.oc-instr{font-size:11px;color:var(--warn);margin-bottom:8px;font-style:italic}
+.oc-bottom{display:flex;justify-content:space-between;align-items:center}
+.oc-total{font-weight:600;font-size:15px;color:var(--text)}
+.oc-acts{display:flex;gap:6px;flex-wrap:wrap}
+.oc-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:8px;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .18s}
+.oc-btn:hover{border-color:var(--text)}
+.oc-btn.ok{background:rgba(61,155,101,.15);border-color:var(--green);color:var(--green)}
+.oc-btn.ok:hover{background:var(--green);color:#fff}
+.oc-btn.danger{background:rgba(200,64,64,.1);border-color:var(--red);color:var(--red)}
+
+/* MENU ADMIN */
+.ma-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+.ma-dot{width:8px;height:8px;border-radius:1.5px;flex-shrink:0;background:var(--green)}
+.ma-info{flex:1;min-width:0}
+.ma-cat{font-size:10px;color:var(--muted);background:var(--surface2);padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:4px}
+.ma-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px}
+.price-row{display:flex;align-items:center;gap:6px}
+.price-sym{font-size:13px;color:var(--muted)}
+.price-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:8px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;width:72px;outline:none;transition:border-color .18s}
+.price-input:focus{border-color:var(--accent)}
+.save-btn{background:transparent;border:1px solid var(--green);color:var(--green);padding:4px 10px;border-radius:7px;font-family:'Jost',sans-serif;font-size:11px;font-weight:500;cursor:pointer;transition:all .18s}
+.save-btn:hover{background:var(--green);color:#fff}
+.ma-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.toggle{position:relative;width:40px;height:22px}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{position:absolute;inset:0;background:#333;border-radius:11px;cursor:pointer;transition:background .25s}
+.toggle input:checked+.toggle-track{background:var(--green)}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .25s;pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.toggle input:checked~.toggle-thumb{transform:translateX(18px)}
+.toggle-lbl{font-size:10px;color:var(--muted)}
+
+/* REVENUE */
+.rev-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.rev-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center}
+.rev-card-label{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:6px}
+.rev-card-val{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.rev-projected{color:var(--warn)}.rev-collected{color:var(--green)}.rev-pending{color:var(--red)}
+
+.hidden{display:none!important}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--surface);border:1px solid var(--border);color:var(--text);padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:all .25s;z-index:999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-logo">Vrindavan</div>
+  <div class="login-sub">Admin Dashboard</div>
+  <div class="login-form">
+    <input class="l-input" id="aEmail" type="email" placeholder="Email" oninput="validateA()">
+    <input class="l-input" id="aPass" type="password" placeholder="Password" oninput="validateA()" onkeydown="if(event.key==='Enter')doALogin()">
+    <div class="l-err" id="aErr"></div>
+    <button class="l-btn" id="aBtn" onclick="doALogin()" disabled>Sign In</button>
+    <div class="l-hint">owner@vrindavan.com</div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div id="adminApp">
+  <div class="top-nav">
+    <div class="nav-brand">Vrindavan <span>Admin</span></div>
+    <div class="nav-right">
+      <span class="nav-role" id="navRole">Owner</span>
+      <button class="logout-btn" onclick="doALogout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('dashboard',this)">📊 Dashboard</button>
+    <button class="tab" onclick="showTab('orders',this)">📋 Orders</button>
+    <button class="tab" onclick="showTab('menu',this)">🍽️ Menu</button>
+    <button class="tab" onclick="showTab('revenue',this)">💰 Revenue</button>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard" class="body">
+    <div class="live-row"><div class="ldot"></div>Live — updates instantly from Firebase</div>
+    <div class="kpi-grid" id="kpiGrid"></div>
+    <div class="sec-h">Active Orders</div>
+    <div id="dashOrders"></div>
+  </div>
+
+  <!-- ORDERS TAB -->
+  <div id="tab-orders" class="body hidden">
+    <div class="sec-h">All Orders Today</div>
+    <div id="allOrdersList"></div>
+  </div>
+
+  <!-- MENU TAB -->
+  <div id="tab-menu" class="body hidden">
+    <div class="sec-h">Menu Management</div>
+    <div id="adminMenuList"></div>
+  </div>
+
+  <!-- REVENUE TAB -->
+  <div id="tab-revenue" class="body hidden">
+    <div class="sec-h">Revenue Today</div>
+    <div class="rev-cards">
+      <div class="rev-card"><div class="rev-card-label">Projected</div><div class="rev-card-val rev-projected" id="rev-proj">₹0</div></div>
+      <div class="rev-card"><div class="rev-card-label">Collected</div><div class="rev-card-val rev-collected" id="rev-coll">₹0</div></div>
+      <div class="rev-card"><div class="rev-card-label">Pending</div><div class="rev-card-val rev-pending" id="rev-pend">₹0</div></div>
+    </div>
+    <div id="revenueList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script type="module">
+// ── FIREBASE ────────────────────────────────────────────────
+import { initializeApp }                               from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, query, where, doc,
+         onSnapshot, updateDoc, setDoc, getDoc,
+         serverTimestamp, orderBy, getDocs }           from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD4ucjiF7IjSJUnVS0hFURYI75xZaTLo7k",
+  authDomain: "cafe-99.firebaseapp.com",
+  databaseURL: "https://cafe-99-default-rtdb.firebaseio.com",
+  projectId: "cafe-99",
+  storageBucket: "cafe-99.firebasestorage.app",
+  messagingSenderId: "750275360719",
+  appId: "1:750275360719:web:23aed0aca397a88ae304ba"
+};
+
+const app  = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db   = getFirestore(app);
+
+const ALLOWED_ROLES = ['admin', 'owner'];
+let unsub = null;
+let liveOrders = [];
+
+// ── STATUS HELPERS ───────────────────────────────────────────
+const statusMap = {new:'s-new',preparing:'s-preparing',ready:'s-ready',served:'s-served',collected:'s-collected',cancelled:'s-cancelled'};
+const statusLabel = {new:'New',preparing:'Preparing',ready:'Ready',served:'Served',collected:'Collected',cancelled:'Cancelled'};
+
+// ── LOGIN ────────────────────────────────────────────────────
+window.validateA = () => {
+  document.getElementById('aBtn').disabled =
+    !(document.getElementById('aEmail').value && document.getElementById('aPass').value.length >= 4);
+};
+
+window.doALogin = async () => {
+  const email = document.getElementById('aEmail').value.trim();
+  const pass  = document.getElementById('aPass').value;
+  const err   = document.getElementById('aErr');
+  const btn   = document.getElementById('aBtn');
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  err.style.display = 'none';
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    const snap = await getDoc(doc(db, 'staff', cred.user.uid));
+    const role = snap.exists() ? snap.data().role : null;
+    if (!ALLOWED_ROLES.includes(role)) {
+      await signOut(auth);
+      err.textContent = 'Access denied — admin only';
+      err.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Sign In';
+      return;
+    }
+    document.getElementById('navRole').textContent = role === 'owner' ? 'Owner' : 'Admin';
+    openAdmin();
+  } catch (e) {
+    err.textContent = e.code === 'auth/invalid-credential' ? 'Wrong email or password' : (e.message || 'Login failed');
+    err.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+};
+
+window.doALogout = async () => {
+  if (unsub) unsub();
+  await signOut(auth);
+  document.getElementById('adminApp').style.display    = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('aPass').value = '';
+  document.getElementById('aBtn').disabled = true;
+  document.getElementById('aBtn').textContent = 'Sign In';
+};
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    const snap = await getDoc(doc(db, 'staff', user.uid));
+    if (snap.exists() && ALLOWED_ROLES.includes(snap.data().role)) openAdmin();
+  }
+});
+
+// ── OPEN ADMIN ───────────────────────────────────────────────
+function openAdmin() {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display    = 'block';
+  subscribeOrders();
+  loadMenu();
+}
+
+// ── LIVE ORDERS ──────────────────────────────────────────────
+function subscribeOrders() {
+  const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+  unsub = onSnapshot(q, snapshot => {
+    liveOrders = [];
+    snapshot.forEach(d => liveOrders.push({ _id: d.id, ...d.data() }));
+    refreshAllTabs();
+  });
+}
+
+function refreshAllTabs() {
+  renderKPIs();
+  renderDashOrders();
+  renderAllOrders();
+  renderRevenue();
+}
+
+// ── KPIs ─────────────────────────────────────────────────────
+function renderKPIs() {
+  const today = liveOrders.filter(o => {
+    const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || 0);
+    return d.toDateString() === new Date().toDateString();
+  });
+  const revenue  = today.filter(o=>o.status!=='cancelled').reduce((a,b)=>a+(b.total||0),0);
+  const active   = liveOrders.filter(o=>['new','preparing','ready'].includes(o.status)).length;
+  const served   = today.filter(o=>o.status==='served'||o.status==='collected').length;
+  const tables   = [...new Set(today.map(o=>o.table))].length;
+  document.getElementById('kpiGrid').innerHTML = `
+    <div class="kpi"><div class="kpi-label">Revenue Today</div><div class="kpi-val">₹${revenue.toLocaleString('en-IN')}</div><div class="kpi-change">Live</div></div>
+    <div class="kpi"><div class="kpi-label">Active Orders</div><div class="kpi-val">${active}</div><div class="kpi-change">${served} served today</div></div>
+    <div class="kpi"><div class="kpi-label">Orders Today</div><div class="kpi-val">${today.length}</div></div>
+    <div class="kpi"><div class="kpi-label">Tables Active</div><div class="kpi-val">${tables}</div></div>
+  `;
+}
+
+// ── DASHBOARD ORDERS ─────────────────────────────────────────
+function renderDashOrders() {
+  const active = liveOrders.filter(o => ['new','preparing','ready'].includes(o.status));
+  document.getElementById('dashOrders').innerHTML = active.length
+    ? active.map(o => adminOrderCard(o)).join('')
+    : '<div style="font-size:13px;color:var(--muted);text-align:center;padding:32px 0">No active orders right now</div>';
+}
+
+// ── ALL ORDERS ───────────────────────────────────────────────
+function renderAllOrders() {
+  const today = liveOrders.filter(o => {
+    const d = o.createdAt?.toDate ? o.createdAt.toDate() : new Date(o.createdAt || 0);
+    return d.toDateString() === new Date().toDateString();
+  });
+  document.getElementById('allOrdersList').innerHTML = today.length
+    ? today.map(o => adminOrderCard(o)).join('')
+    : '<div style="font-size:13px;color:var(--muted);text-align:center;padding:32px 0">No orders today</div>';
+}
+
+function adminOrderCard(o) {
+  const items = Array.isArray(o.items) ? o.items.map(i=>`${i.name} ×${i.qty}`).join(', ') : (o.items||'');
+  const note  = o.instructions ? `<div class="oc-instr">📝 ${o.instructions}</div>` : '';
+  const ts    = o.createdAt?.toDate ? o.createdAt.toDate() : new Date();
+  const mins  = Math.floor((Date.now()-ts.getTime())/60000);
+  const isNew = o.status === 'new';
+
+  return `<div class="order-card${isNew?' new-order':''}">
+    <div class="oc-top">
+      <div>
+        <div class="oc-id">#${o.orderId||o._id.slice(-6).toUpperCase()} · Table ${o.table}</div>
+        <div class="oc-meta">${o.customer||'Guest'} · ${mins < 1 ? 'Just now' : mins+'m ago'}</div>
+      </div>
+      <span class="status ${statusMap[o.status]||''}">${statusLabel[o.status]||o.status}</span>
+    </div>
+    <div class="oc-items">${items}</div>
+    ${note}
+    <div class="oc-bottom">
+      <div class="oc-total">₹${o.total||0}</div>
+      <div class="oc-acts">
+        ${o.status==='new' ? `<button class="oc-btn ok" onclick="adminSetStatus('${o._id}','preparing')">→ Preparing</button>` : ''}
+        ${o.status==='preparing' ? `<button class="oc-btn ok" onclick="adminSetStatus('${o._id}','ready')">→ Ready</button>` : ''}
+        ${o.status==='ready' ? `<button class="oc-btn ok" onclick="adminSetStatus('${o._id}','served')">→ Served</button>` : ''}
+        ${o.status!=='cancelled'&&o.status!=='collected' ? `<button class="oc-btn danger" onclick="adminSetStatus('${o._id}','cancelled')">Cancel</button>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+window.adminSetStatus = async (docId, status) => {
+  await updateDoc(doc(db, 'orders', docId), { status, updatedAt: serverTimestamp() });
+  toast(`Status updated → ${statusLabel[status]}`);
+};
+
+// ── REVENUE ──────────────────────────────────────────────────
+function renderRevenue() {
+  const projected = liveOrders.filter(o=>o.status!=='cancelled').reduce((a,b)=>a+(b.total||0),0);
+  const collected = liveOrders.filter(o=>o.status==='collected').reduce((a,b)=>a+(b.total||0),0);
+  const pending   = projected - collected;
+  document.getElementById('rev-proj').textContent = `₹${projected.toLocaleString('en-IN')}`;
+  document.getElementById('rev-coll').textContent = `₹${collected.toLocaleString('en-IN')}`;
+  document.getElementById('rev-pend').textContent = `₹${pending.toLocaleString('en-IN')}`;
+
+  document.getElementById('revenueList').innerHTML = liveOrders
+    .filter(o=>o.status!=='cancelled')
+    .map(o => {
+      const items = Array.isArray(o.items)?o.items.map(i=>i.name).join(', '):(o.items||'');
+      return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <div><div style="font-size:13px;font-weight:500;color:var(--text)">Table ${o.table} · ${o.customer||'Guest'}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${items.split(',')[0]}${items.includes(',')?'…':''}</div></div>
+        <div style="text-align:right"><div style="font-size:14px;font-weight:600">₹${o.total||0}</div><span class="status ${statusMap[o.status]||''}" style="margin-top:4px;display:inline-block">${statusLabel[o.status]||o.status}</span></div>
+      </div>`;
+    }).join('') || '<div style="font-size:13px;color:var(--muted)">No orders yet</div>';
+}
+
+// ── MENU MANAGEMENT ──────────────────────────────────────────
+let menuItems = [];
+
+async function loadMenu() {
+  try {
+    const snap = await getDocs(collection(db, 'menu'));
+    menuItems = [];
+    snap.forEach(d => menuItems.push({ _id: d.id, ...d.data() }));
+    renderAdminMenu();
+  } catch {}
+}
+
+function renderAdminMenu() {
+  document.getElementById('adminMenuList').innerHTML = menuItems.map(d => `
+    <div class="ma-card">
+      <div class="ma-dot"></div>
+      <div class="ma-info">
+        <div class="ma-cat">${d.category||d.cat||''}</div>
+        <div class="ma-name">${d.name}</div>
+        <div class="price-row">
+          <span class="price-sym">₹</span>
+          <input class="price-input" type="number" value="${d.price||0}" id="p-${d._id}" min="1">
+          <button class="save-btn" onclick="savePrice('${d._id}')">Save</button>
+        </div>
+      </div>
+      <div class="ma-right">
+        <label class="toggle">
+          <input type="checkbox" ${d.inStock||d.in_stock?'checked':''} onchange="toggleStock('${d._id}',this.checked)">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+        <div class="toggle-lbl" id="stk-${d._id}">${d.inStock||d.in_stock?'In Stock':'Sold Out'}</div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--muted);font-size:13px;text-align:center;padding:32px">No menu items found in Firestore.<br>Add items to the <b>menu</b> collection.</div>';
+}
+
+window.savePrice = async (id) => {
+  const val = parseInt(document.getElementById('p-'+id).value);
+  if (!val || val < 1) { toast('Enter a valid price'); return; }
+  await updateDoc(doc(db, 'menu', id), { price: val, updatedAt: serverTimestamp() });
+  const d = menuItems.find(x=>x._id===id);
+  if (d) d.price = val;
+  toast(`✓ Price updated to ₹${val}`);
+};
+
+window.toggleStock = async (id, inStock) => {
+  await updateDoc(doc(db, 'menu', id), { inStock, in_stock: inStock, updatedAt: serverTimestamp() });
+  const d = menuItems.find(x=>x._id===id);
+  if (d) { d.inStock = inStock; d.in_stock = inStock; }
+  document.getElementById('stk-'+id).textContent = inStock ? 'In Stock' : 'Sold Out';
+  toast(`${d?.name||'Item'} → ${inStock?'In Stock ✓':'Sold Out'}`);
+};
+
+// ── TABS ─────────────────────────────────────────────────────
+window.showTab = (name, btn) => {
+  document.querySelectorAll('[id^="tab-"]').forEach(t => t.classList.add('hidden'));
+  document.getElementById('tab-'+name).classList.remove('hidden');
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  if (name === 'menu' && !menuItems.length) loadMenu();
+};
+
+// ── TOAST ────────────────────────────────────────────────────
+let toastTimer;
+window.toast = (msg) => {
+  const el = document.getElementById('toastEl');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2600);
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Vrindavan Restaurant System</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F6F4F0;--surface:#FFF;--border:#E8E4DC;--text:#1C1C1A;--muted:#8A8780;
+  --accent:#C8922A;--accent-light:#F5EDD8;--green:#2D7A4F;--red:#B83232;--blue:#2563EB;
+  --dark:#141412;--shadow:0 2px 16px rgba(0,0,0,.07);--shadow-lg:0 8px 32px rgba(0,0,0,.12);
+  --orange:#D97706;--purple:#7C3AED;
+}
+body.dark{
+  --bg:#111110;--surface:#1C1C1A;--border:#2A2A28;--text:#F0EDE8;--muted:#6A6A68;
+  --accent:#D4A43A;--accent-light:#2A2210;--green:#3D9B65;--red:#C84040;--dark:#F0EDE8;
+}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s}
+
+/* ── PANEL SWITCHER (top nav for dev/staff access) ── */
+#panelNav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:var(--dark);display:flex;gap:0;height:40px;
+  border-bottom:2px solid var(--accent);
+}
+.pnav-btn{
+  flex:1;border:none;background:transparent;color:rgba(255,255,255,.5);
+  font-family:'Jost',sans-serif;font-size:11px;font-weight:600;letter-spacing:.8px;
+  text-transform:uppercase;cursor:pointer;transition:all .18s;padding:0 4px;
+  border-right:1px solid rgba(255,255,255,.08);
+}
+.pnav-btn:last-child{border-right:none}
+.pnav-btn.active{background:var(--accent);color:#fff}
+.pnav-btn:hover:not(.active){background:rgba(255,255,255,.08);color:#fff}
+
+/* all panels hidden by default, offset for top nav */
+.panel{display:none;padding-top:40px;min-height:100vh}
+.panel.active{display:block}
+
+/* ═══════════════════════════════════════════
+   CUSTOMER PANEL
+═══════════════════════════════════════════ */
+#customerView,#waitingScreen{display:none}
+#customerView.active,#waitingScreen.active{display:block}
+
+#infoScreen{
+  position:fixed;inset:0;background:var(--bg);z-index:300;padding-top:40px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px 32px;
+}
+.info-logo{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:600;color:var(--text);margin-bottom:4px;text-align:center}
+.info-sub{font-size:11px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;text-align:center}
+.table-badge{background:var(--accent-light);border:1px solid var(--accent);color:var(--accent);padding:6px 20px;border-radius:100px;font-size:12px;font-weight:600;letter-spacing:1px;margin-bottom:32px;}
+.info-form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px}
+.info-input{background:var(--surface);border:1.5px solid var(--border);color:var(--text);padding:14px 16px;border-radius:12px;font-family:'Jost',sans-serif;font-size:15px;outline:none;transition:border-color .2s;width:100%;}
+.info-input:focus{border-color:var(--accent)}
+.info-input::placeholder{color:var(--muted)}
+.info-err{font-size:12px;color:var(--red);display:none}
+.info-btn{background:var(--dark);color:var(--bg);border:none;padding:15px;border-radius:12px;font-family:'Jost',sans-serif;font-weight:500;font-size:15px;cursor:pointer;transition:opacity .2s;margin-top:4px;}
+.info-btn:hover{opacity:.85}
+.info-btn:disabled{opacity:.4;cursor:not-allowed}
+.lang-row{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
+.lang-opt{padding:6px 16px;border-radius:100px;border:1.5px solid var(--border);background:var(--surface);color:var(--muted);font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .18s;}
+.lang-opt.active{background:var(--dark);border-color:var(--dark);color:var(--bg)}
+
+.nav{background:var(--surface);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:40px;z-index:100;border-bottom:1px solid var(--border);transition:background .3s,border-color .3s;}
+.nav-brand{display:flex;flex-direction:column}
+.nav-name{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;line-height:1}
+.nav-tagline{font-size:10px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;font-weight:300}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.icon-btn{width:34px;height:34px;background:var(--bg);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;color:var(--text);font-family:'Jost',sans-serif;font-weight:500;font-size:12px;}
+.icon-btn:hover{border-color:var(--text)}
+.cart-pill{background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:100px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;transition:opacity .2s;}
+.cart-pill:hover{opacity:.88}
+.cart-badge{background:#fff;color:var(--accent);border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;}
+
+.hero{background:var(--dark);padding:24px 16px 20px;text-align:center;transition:background .3s}
+.hero h1{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;color:#fff;line-height:1.2;margin-bottom:4px}
+.hero h1 em{color:var(--accent);font-style:italic}
+.hero-info{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+
+.search-wrap{padding:14px 16px 0}
+.search-inner{background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;align-items:center;gap:10px;padding:11px 14px;transition:border-color .2s,background .3s;}
+.search-inner:focus-within{border-color:var(--accent)}
+.search-inner svg{color:var(--muted);flex-shrink:0}
+.search-inner input{border:none;outline:none;flex:1;font-family:'Jost',sans-serif;font-size:14px;color:var(--text);background:transparent}
+.search-inner input::placeholder{color:var(--muted)}
+
+.cats{padding:12px 16px;display:flex;gap:7px;overflow-x:auto;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{white-space:nowrap;padding:7px 16px;border-radius:100px;font-family:'Jost',sans-serif;font-size:13px;font-weight:400;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--muted);transition:all .18s;}
+.cat.active{background:var(--dark);border-color:var(--dark);color:var(--bg);font-weight:500}
+
+.sec-label{padding:16px 16px 8px;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:500}
+
+.menu-list{padding:0 16px;display:flex;flex-direction:column;gap:1px}
+.dish{background:var(--surface);padding:14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);transition:background .15s;}
+.dish:first-child{border-radius:12px 12px 0 0}
+.dish:last-child{border-radius:0 0 12px 12px;border-bottom:none}
+.dish:only-child{border-radius:12px;border-bottom:none}
+.dish:hover{background:var(--bg)}
+.dish.unavailable{opacity:.45;pointer-events:none}
+.veg-dot{width:10px;height:10px;border-radius:2px;border:1.5px solid;flex-shrink:0}
+.veg-dot.veg{border-color:var(--green);background:var(--green)}
+.veg-dot.nonveg{border-color:var(--red);background:var(--red)}
+.dish-body{flex:1;min-width:0}
+.dish-name{font-size:14px;font-weight:500;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dish-desc{font-size:11px;color:var(--muted);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dish-price{font-size:14px;font-weight:600;color:var(--text)}
+.special-tag{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--accent);background:var(--accent-light);padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:3px}
+.dish-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.ar-btn{font-family:'Jost',sans-serif;font-size:11px;font-weight:500;color:var(--accent);border:1px solid var(--accent);background:transparent;padding:5px 10px;border-radius:8px;cursor:pointer;transition:all .18s;white-space:nowrap;}
+.ar-btn:hover{background:var(--accent);color:#fff}
+.qty-ctrl{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.qty-btn{width:28px;height:28px;border:none;background:transparent;font-size:16px;cursor:pointer;color:var(--text);display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.qty-btn:hover{background:var(--bg)}
+.qty-num{width:24px;text-align:center;font-size:13px;font-weight:500;color:var(--text);border-left:1px solid var(--border);border-right:1px solid var(--border);height:28px;display:flex;align-items:center;justify-content:center;}
+.add-btn{width:28px;height:28px;border:1px solid var(--accent);background:var(--surface);border-radius:8px;font-size:18px;cursor:pointer;color:var(--accent);display:flex;align-items:center;justify-content:center;transition:all .18s;}
+.add-btn:hover{background:var(--accent);color:#fff}
+.sold-tag{font-size:10px;color:var(--red);font-weight:500;letter-spacing:.5px}
+
+.waiter-call-wrap{padding:12px 16px 0;display:flex;justify-content:center}
+.waiter-call-btn{background:var(--surface);border:1.5px solid var(--border);color:var(--muted);padding:10px 24px;border-radius:100px;font-family:'Jost',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;}
+.waiter-call-btn:hover{border-color:var(--accent);color:var(--accent)}
+.waiter-call-btn.called{border-color:var(--green);color:var(--green);pointer-events:none}
+
+.bottom-space{height:90px}
+
+.cart-bar{position:fixed;bottom:0;left:0;right:0;background:var(--dark);padding:14px 16px;display:none;z-index:200;transition:background .3s;}
+.cart-bar.visible{display:block}
+.cart-bar-inner{display:flex;align-items:center;justify-content:space-between}
+.cart-bar-info{display:flex;flex-direction:column;gap:1px}
+.cart-bar-items{font-size:11px;color:rgba(255,255,255,.5)}
+.cart-bar-total{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:#fff}
+.cart-bar-btn{background:var(--accent);color:#fff;border:none;padding:11px 22px;border-radius:10px;font-family:'Jost',sans-serif;font-weight:500;font-size:14px;cursor:pointer;transition:opacity .2s;}
+.cart-bar-btn:hover{opacity:.88}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;align-items:flex-end;justify-content:center}
+.overlay.open{display:flex}
+.sheet{background:var(--surface);border-radius:20px 20px 0 0;padding:0 0 32px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;animation:slideUp .28s cubic-bezier(.32,.72,0,1);transition:background .3s;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-handle{width:36px;height:3px;background:var(--border);border-radius:2px;margin:12px auto 0}
+.sheet-head{padding:20px 20px 14px;border-bottom:1px solid var(--border)}
+.sheet-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text)}
+.sheet-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.ar-visual{margin:20px;background:var(--bg);border-radius:16px;height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--border)}
+.ar-visual .ar-emoji{font-size:56px}
+.ar-visual .ar-hint{font-size:11px;color:var(--muted)}
+.sheet-actions{padding:0 20px;display:flex;flex-direction:column;gap:10px}
+.btn-primary{width:100%;background:var(--dark);color:var(--bg);border:none;padding:14px;border-radius:12px;font-family:'Jost',sans-serif;font-weight:500;font-size:15px;cursor:pointer;transition:opacity .2s;}
+.btn-primary:hover{opacity:.85}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-outline{width:100%;background:transparent;color:var(--text);border:1px solid var(--border);padding:13px;border-radius:12px;font-family:'Jost',sans-serif;font-weight:400;font-size:14px;cursor:pointer;transition:all .2s;}
+.btn-outline:hover{border-color:var(--text)}
+
+.cart-item{display:flex;align-items:center;padding:14px 20px;gap:12px;border-bottom:1px solid var(--border)}
+.ci-dot{width:8px;height:8px;border-radius:1.5px;flex-shrink:0}
+.ci-dot.veg{background:var(--green)}
+.ci-name{flex:1;font-size:14px;font-weight:500;color:var(--text)}
+.ci-qty{font-size:12px;color:var(--muted)}
+.ci-price{font-size:14px;font-weight:600;color:var(--text)}
+.cart-total-row{display:flex;justify-content:space-between;padding:14px 20px;background:var(--bg);margin:12px 20px;border-radius:10px}
+.ct-label{font-size:13px;color:var(--muted)}
+.ct-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text)}
+
+.special-instr{padding:0 20px 12px}
+.special-instr textarea{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-family:'Jost',sans-serif;font-size:13px;resize:none;outline:none;transition:border-color .2s;}
+.special-instr textarea:focus{border-color:var(--accent)}
+.special-instr label{font-size:11px;color:var(--muted);display:block;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+
+#waitingScreen{min-height:calc(100vh - 40px);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 20px;text-align:center;}
+.waiting-icon{font-size:48px;margin-bottom:16px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+.waiting-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--text);margin-bottom:8px}
+.waiting-sub{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:24px}
+.waiting-table{background:var(--accent-light);border:1px solid var(--accent);color:var(--accent);padding:8px 20px;border-radius:100px;font-size:13px;font-weight:600;display:inline-block;margin-bottom:24px}
+
+/* order status tracker on waiting screen */
+.order-status-tracker{width:100%;max-width:320px;margin-bottom:24px}
+.ost-step{display:flex;align-items:center;gap:12px;padding:10px 0;position:relative}
+.ost-step:not(:last-child)::after{content:'';position:absolute;left:15px;top:34px;width:2px;height:20px;background:var(--border)}
+.ost-step.done::after{background:var(--green)}
+.ost-icon{width:32px;height:32px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;transition:all .4s;}
+.ost-step.done .ost-icon{background:var(--green);color:#fff}
+.ost-step.active .ost-icon{background:var(--accent);color:#fff;animation:pulse 1.5s infinite}
+.ost-label{font-size:13px;font-weight:500;color:var(--muted)}
+.ost-step.done .ost-label,.ost-step.active .ost-label{color:var(--text)}
+
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--dark);color:var(--bg);padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:all .25s;z-index:9999;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.spacer{height:16px}
+.hidden{display:none!important}
+
+/* ═══════════════════════════════════════════
+   KITCHEN PANEL
+═══════════════════════════════════════════ */
+#kitchenPanel{background:#0f0f0e;color:#f0ede8;min-height:100vh}
+.k-header{background:#1a1a18;border-bottom:2px solid #C8922A;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:40px;z-index:50}
+.k-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:#fff}
+.k-subtitle{font-size:11px;color:#6a6a68;letter-spacing:1px;text-transform:uppercase}
+.k-stats{display:flex;gap:16px;align-items:center}
+.k-stat{text-align:center}
+.k-stat-num{font-size:22px;font-weight:600;color:#C8922A;line-height:1}
+.k-stat-lbl{font-size:10px;color:#6a6a68;text-transform:uppercase;letter-spacing:.5px}
+.k-live{display:flex;align-items:center;gap:6px;font-size:11px;color:#3D9B65;font-weight:600}
+.k-live-dot{width:7px;height:7px;border-radius:50%;background:#3D9B65;animation:blink 1.2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+.k-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid #2a2a28}
+.k-col{border-right:1px solid #2a2a28;min-height:calc(100vh - 120px)}
+.k-col:last-child{border-right:none}
+.k-col-head{padding:12px 16px;background:#1a1a18;border-bottom:1px solid #2a2a28;display:flex;align-items:center;gap:8px}
+.k-col-title{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase}
+.k-col-count{background:#2a2a28;color:#8a8780;border-radius:100px;padding:2px 8px;font-size:11px;font-weight:600}
+.k-col.pending .k-col-title{color:#D97706}
+.k-col.cooking .k-col-title{color:#C8922A}
+.k-col.ready .k-col-title{color:#3D9B65}
+.k-col.pending .k-col-count{background:rgba(217,119,6,.15);color:#D97706}
+.k-col.cooking .k-col-count{background:rgba(200,146,42,.15);color:#C8922A}
+.k-col.ready .k-col-count{background:rgba(61,155,101,.15);color:#3D9B65}
+
+.k-cards{padding:12px;display:flex;flex-direction:column;gap:10px}
+.k-card{background:#1c1c1a;border:1px solid #2a2a28;border-radius:12px;overflow:hidden;transition:border-color .2s}
+.k-card:hover{border-color:#3a3a38}
+.k-card.urgent{border-color:#C84040;animation:urgentPulse 2s infinite}
+@keyframes urgentPulse{0%,100%{border-color:#C84040}50%{border-color:#8B2020}}
+.k-card-head{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2a2a28}
+.k-order-id{font-size:13px;font-weight:600;color:#fff}
+.k-table{font-size:11px;color:#8a8780;background:#2a2a28;padding:2px 8px;border-radius:100px}
+.k-time{font-size:11px;font-weight:600;padding:2px 8px;border-radius:100px}
+.k-time.ok{background:rgba(45,122,79,.2);color:#3D9B65}
+.k-time.warn{background:rgba(217,119,6,.2);color:#D97706}
+.k-time.urgent{background:rgba(184,50,50,.2);color:#C84040}
+.k-card-body{padding:10px 14px}
+.k-item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:#d0cdc8}
+.k-item-qty{font-weight:700;color:#fff;min-width:18px}
+.k-item-note{font-size:10px;color:#D97706;margin-top:2px;padding-left:26px}
+.k-card-actions{padding:10px 14px;display:flex;gap:8px;border-top:1px solid #2a2a28}
+.k-btn{flex:1;border:none;padding:9px;border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;letter-spacing:.3px}
+.k-btn.start{background:rgba(200,146,42,.15);color:#C8922A;border:1px solid rgba(200,146,42,.3)}
+.k-btn.start:hover{background:#C8922A;color:#fff}
+.k-btn.done{background:rgba(61,155,101,.15);color:#3D9B65;border:1px solid rgba(61,155,101,.3)}
+.k-btn.done:hover{background:#3D9B65;color:#fff}
+.k-btn.served{background:rgba(255,255,255,.05);color:#6a6a68;border:1px solid #2a2a28}
+.k-btn.served:hover{background:#2a2a28;color:#d0cdc8}
+.k-empty{padding:32px;text-align:center;color:#3a3a38;font-size:13px}
+
+/* ═══════════════════════════════════════════
+   WAITER PANEL
+═══════════════════════════════════════════ */
+#waiterPanel{background:var(--bg);min-height:100vh}
+.w-header{background:var(--surface);border-bottom:2px solid var(--accent);padding:14px 20px;position:sticky;top:40px;z-index:50;display:flex;align-items:center;justify-content:space-between}
+.w-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.alert-badge{background:var(--red);color:#fff;border-radius:50%;width:22px;height:22px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+.w-tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:calc(40px + 57px);z-index:49}
+.w-tab{flex:1;padding:12px;text-align:center;font-size:12px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px}
+.w-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.w-tab-badge{background:var(--red);color:#fff;border-radius:50%;width:16px;height:16px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+.w-content{padding:12px 16px}
+.w-alert-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;align-items:center;gap:12px;transition:border-color .2s}
+.w-alert-card.new{border-color:var(--accent);background:var(--accent-light)}
+.w-alert-card.waiter-call{border-color:var(--red)}
+.w-alert-icon{font-size:24px;flex-shrink:0}
+.w-alert-body{flex:1}
+.w-alert-title{font-size:14px;font-weight:600;color:var(--text)}
+.w-alert-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.w-alert-time{font-size:11px;color:var(--muted)}
+.w-ack-btn{background:var(--green);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.w-ack-btn:hover{opacity:.85}
+
+.w-order-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;overflow:hidden}
+.w-order-head{padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.w-order-id{font-size:13px;font-weight:600}
+.w-order-table{background:var(--bg);padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;color:var(--muted)}
+.w-status-pill{font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:3px 10px;border-radius:100px}
+.w-status-pill.pending{background:rgba(217,119,6,.12);color:#D97706}
+.w-status-pill.cooking{background:rgba(200,146,42,.12);color:#C8922A}
+.w-status-pill.ready{background:rgba(45,122,79,.12);color:var(--green);animation:readyGlow .8s infinite alternate}
+@keyframes readyGlow{from{background:rgba(45,122,79,.12)}to{background:rgba(45,122,79,.25)}}
+.w-status-pill.served{background:var(--border);color:var(--muted)}
+.w-order-items{padding:10px 14px;font-size:13px;color:var(--muted)}
+.w-order-item{display:flex;gap:8px;padding:3px 0}
+.w-order-item-qty{font-weight:700;color:var(--text)}
+.w-serve-btn{width:100%;border:none;background:var(--green);color:#fff;padding:10px;font-family:'Jost',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .2s}
+.w-serve-btn:hover{opacity:.88}
+
+/* ═══════════════════════════════════════════
+   ADMIN PANEL
+═══════════════════════════════════════════ */
+#adminPanel{background:var(--bg);min-height:100vh}
+.a-header{background:var(--surface);border-bottom:2px solid var(--accent);padding:14px 20px;position:sticky;top:40px;z-index:50;display:flex;align-items:center;justify-content:space-between}
+.a-title{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600}
+.a-subtitle{font-size:11px;color:var(--muted);margin-top:2px}
+
+.a-metrics{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px}
+.a-metric{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px}
+.a-metric-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--text);line-height:1}
+.a-metric-lbl{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.a-metric-delta{font-size:11px;margin-top:6px;font-weight:600}
+.a-metric-delta.up{color:var(--green)}
+.a-metric-delta.dn{color:var(--red)}
+
+.a-section{padding:0 16px 16px}
+.a-sec-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:10px}
+
+/* bar chart */
+.a-chart{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px}
+.a-chart-title{font-size:13px;font-weight:600;margin-bottom:12px}
+.a-bars{display:flex;align-items:flex-end;gap:6px;height:80px}
+.a-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.a-bar{width:100%;background:var(--accent);border-radius:4px 4px 0 0;transition:height .5s cubic-bezier(.34,1.56,.64,1);min-height:2px}
+.a-bar-lbl{font-size:9px;color:var(--muted);text-transform:uppercase}
+.a-bar-val{font-size:9px;font-weight:600;color:var(--text)}
+
+/* top dishes */
+.a-dish-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.a-dish-row:last-child{border-bottom:none}
+.a-dish-rank{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;color:var(--muted);width:24px;text-align:center;flex-shrink:0}
+.a-dish-info{flex:1}
+.a-dish-name{font-size:14px;font-weight:500}
+.a-dish-count{font-size:11px;color:var(--muted)}
+.a-dish-rev{font-size:13px;font-weight:600;color:var(--accent)}
+.a-bar-mini{height:4px;background:var(--border);border-radius:2px;margin-top:4px}
+.a-bar-mini-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s}
+
+/* orders table */
+.a-orders-table{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.a-orders-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px;font-size:13px}
+.a-orders-row:last-child{border-bottom:none}
+.a-orders-row.head{background:var(--bg);font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.aor-id{width:80px;font-weight:600}
+.aor-table{width:56px}
+.aor-items{flex:1;color:var(--muted)}
+.aor-amt{width:60px;font-weight:600;text-align:right}
+.aor-status{width:70px;text-align:right}
+
+/* toggle for menu items */
+.a-menu-item{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.a-menu-name{flex:1;font-size:13px;font-weight:500}
+.a-menu-price{font-size:12px;color:var(--muted);margin-right:8px}
+.toggle{width:36px;height:20px;background:var(--border);border-radius:100px;cursor:pointer;position:relative;transition:background .2s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(16px)}
+</style>
+</head>
+<body>
+
+<!-- PANEL SWITCHER NAV -->
+<div id="panelNav">
+  <button class="pnav-btn active" onclick="switchPanel('customer')">🪑 Customer</button>
+  <button class="pnav-btn" onclick="switchPanel('kitchen')">👨‍🍳 Kitchen</button>
+  <button class="pnav-btn" onclick="switchPanel('waiter')">🙋 Waiter</button>
+  <button class="pnav-btn" onclick="switchPanel('admin')">📊 Admin</button>
+</div>
+
+<!-- ══════════════════════════════════
+     CUSTOMER PANEL
+══════════════════════════════════ -->
+<div class="panel active" id="customerPanel">
+
+<!-- INFO SCREEN -->
+<div id="infoScreen">
+  <div class="info-logo">Vrindavan</div>
+  <div class="info-sub" id="lbl-tagline">Pure Veg · Est. 1995</div>
+  <div class="table-badge" id="tableBadge">Table —</div>
+  <div class="lang-row">
+    <button class="lang-opt active" onclick="setLang('en',this)">English</button>
+    <button class="lang-opt" onclick="setLang('hi',this)">हिंदी</button>
+  </div>
+  <div class="info-form">
+    <input class="info-input" id="custName" placeholder="Your Name" maxlength="50" oninput="validateInfo()">
+    <input class="info-input" id="custMobile" placeholder="Mobile Number (10 digits)" maxlength="10" type="tel" oninput="validateInfo()">
+    <div class="info-err" id="infoErr"></div>
+    <button class="info-btn" id="infoBtn" onclick="startSession()" disabled>Enter Menu</button>
+  </div>
+</div>
+
+<!-- CUSTOMER VIEW -->
+<div id="customerView">
+  <nav class="nav">
+    <div class="nav-brand">
+      <div class="nav-name">Vrindavan</div>
+      <div class="nav-tagline" id="lbl-nav-tagline">Pure Veg · Est. 1995</div>
+    </div>
+    <div class="nav-actions">
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+      <button class="icon-btn" id="langToggleBtn" onclick="toggleLang()" style="font-size:11px;padding:0 8px;width:auto;">EN</button>
+      <button class="cart-pill" onclick="openCart()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <span id="lbl-cart">Cart</span>
+        <div class="cart-badge" id="navCount">0</div>
+      </button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <h1 id="lbl-hero-title">Pure Flavours,<br><em>Timeless Tradition</em></h1>
+    <div class="hero-info" id="heroInfo">Tap AR View on any dish to see it on your table</div>
+  </div>
+
+  <div class="waiter-call-wrap">
+    <button class="waiter-call-btn" id="waiterCallBtn" onclick="callWaiter()">
+      🙋 <span id="lbl-call-waiter">Call Waiter</span>
+    </button>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-inner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input type="text" id="searchInput" oninput="renderMenu()" placeholder="Search dishes...">
+    </div>
+  </div>
+
+  <div class="cats" id="catBar"></div>
+  <div id="menuRoot"><div style="text-align:center;padding:40px;color:var(--muted)">Loading menu...</div></div>
+  <div class="bottom-space"></div>
+
+  <div class="cart-bar" id="cartBar">
+    <div class="cart-bar-inner">
+      <div class="cart-bar-info">
+        <div class="cart-bar-items" id="cartBarItems">0 items</div>
+        <div class="cart-bar-total" id="cartBarTotal">₹0</div>
+      </div>
+      <button class="cart-bar-btn" onclick="openCart()" id="lbl-view-cart">View Cart →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAITING / ORDER STATUS SCREEN -->
+<div id="waitingScreen">
+  <div class="waiting-icon">🍽️</div>
+  <div class="waiting-title" id="lbl-wait-title">Your order is being prepared!</div>
+  <div class="waiting-sub" id="lbl-wait-sub">Our kitchen has received your order. Please wait — we'll serve you shortly.</div>
+  <div class="waiting-table" id="waitTableBadge">Table —</div>
+
+  <!-- Live order status tracker -->
+  <div class="order-status-tracker" id="ostTracker">
+    <div class="ost-step done" id="ost-placed">
+      <div class="ost-icon">✓</div>
+      <div class="ost-label">Order Placed</div>
+    </div>
+    <div class="ost-step active" id="ost-confirmed">
+      <div class="ost-icon">📋</div>
+      <div class="ost-label">Confirmed by Kitchen</div>
+    </div>
+    <div class="ost-step" id="ost-cooking">
+      <div class="ost-icon">🔥</div>
+      <div class="ost-label">Being Prepared</div>
+    </div>
+    <div class="ost-step" id="ost-ready">
+      <div class="ost-icon">✅</div>
+      <div class="ost-label">Ready to Serve</div>
+    </div>
+    <div class="ost-step" id="ost-served">
+      <div class="ost-icon">🎉</div>
+      <div class="ost-label">Served — Enjoy!</div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;width:100%;max-width:320px;">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px;letter-spacing:1px;text-transform:uppercase" id="lbl-order-id">Order ID</div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--text)" id="waitOrderId">#VR-0000</div>
+  </div>
+  <button class="info-btn" style="max-width:320px;width:100%" onclick="orderMore()" id="lbl-order-more">Order More Items</button>
+</div>
+
+</div><!-- end customerPanel -->
+
+<!-- AR SHEET -->
+<div class="overlay" id="arOverlay" onclick="closeSheet('arOverlay')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title" id="arName">Dish</div>
+      <div class="sheet-sub" id="lbl-ar-sub">View this dish in Augmented Reality on your table</div>
+    </div>
+    <div class="ar-visual">
+      <div class="ar-emoji" id="arEmoji">🍛</div>
+      <div class="ar-hint" id="lbl-ar-hint">Tap below to launch AR</div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-primary" onclick="launchAR()" id="lbl-launch-ar">Launch AR View</button>
+      <button class="btn-outline" onclick="closeSheet('arOverlay')" id="lbl-close">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- CART SHEET -->
+<div class="overlay" id="cartOverlay" onclick="closeSheet('cartOverlay')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-head">
+      <div class="sheet-title" id="lbl-your-cart">Your Cart</div>
+      <div class="sheet-sub" id="cartSheetSub">0 items</div>
+    </div>
+    <div id="cartSheetItems"></div>
+    <div class="special-instr">
+      <label id="lbl-special-instr">Special Instructions (optional)</label>
+      <textarea id="specialInstr" rows="2" placeholder="No onion, extra sauce, less spicy..."></textarea>
+    </div>
+    <div class="cart-total-row">
+      <div class="ct-label" id="lbl-total">Total</div>
+      <div class="ct-val" id="cartSheetTotal">₹0</div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-primary" id="placeOrderBtn" onclick="placeOrder()">Place Order →</button>
+      <button class="btn-outline" onclick="closeSheet('cartOverlay')" id="lbl-continue">Continue Ordering</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<!-- ══════════════════════════════════
+     KITCHEN PANEL
+══════════════════════════════════ -->
+<div class="panel" id="kitchenPanel">
+  <div class="k-header">
+    <div>
+      <div class="k-title">Kitchen Live View</div>
+      <div class="k-subtitle">Vrindavan · Real-time orders</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="k-stats">
+        <div class="k-stat"><div class="k-stat-num" id="kStatPending">0</div><div class="k-stat-lbl">Pending</div></div>
+        <div class="k-stat"><div class="k-stat-num" id="kStatCooking">0</div><div class="k-stat-lbl">Cooking</div></div>
+        <div class="k-stat"><div class="k-stat-num" id="kStatReady">0</div><div class="k-stat-lbl">Ready</div></div>
+      </div>
+      <div class="k-live"><div class="k-live-dot"></div>LIVE</div>
+    </div>
+  </div>
+  <div class="k-cols">
+    <div class="k-col pending">
+      <div class="k-col-head">
+        <span class="k-col-title">New Orders</span>
+        <span class="k-col-count" id="kColPendingCount">0</span>
+      </div>
+      <div class="k-cards" id="kColPending"></div>
+    </div>
+    <div class="k-col cooking">
+      <div class="k-col-head">
+        <span class="k-col-title">Cooking</span>
+        <span class="k-col-count" id="kColCookingCount">0</span>
+      </div>
+      <div class="k-cards" id="kColCooking"></div>
+    </div>
+    <div class="k-col ready">
+      <div class="k-col-head">
+        <span class="k-col-title">Ready</span>
+        <span class="k-col-count" id="kColReadyCount">0</span>
+      </div>
+      <div class="k-cards" id="kColReady"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     WAITER PANEL
+══════════════════════════════════ -->
+<div class="panel" id="waiterPanel">
+  <div class="w-header">
+    <div>
+      <div class="w-title">Waiter Dashboard</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:12px;color:var(--muted)">Alerts</span>
+      <div class="alert-badge" id="waiterAlertBadge">0</div>
+    </div>
+  </div>
+  <div class="w-tabs">
+    <div class="w-tab active" onclick="waiterTab('alerts',this)">
+      🔔 Alerts <div class="w-tab-badge" id="wAlertTabBadge">0</div>
+    </div>
+    <div class="w-tab" onclick="waiterTab('orders',this)">📋 Orders</div>
+  </div>
+  <div class="w-content" id="wAlertsContent"></div>
+  <div class="w-content hidden" id="wOrdersContent"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     ADMIN PANEL
+══════════════════════════════════ -->
+<div class="panel" id="adminPanel">
+  <div class="a-header">
+    <div>
+      <div class="a-title">Admin Analytics</div>
+      <div class="a-subtitle" id="adminDate">Today's Overview</div>
+    </div>
+    <button class="icon-btn" onclick="resetDemoData()" title="Reset demo data" style="font-size:10px;width:auto;padding:0 10px">Reset</button>
+  </div>
+
+  <div class="a-metrics" id="adminMetrics"></div>
+
+  <div class="a-section">
+    <div class="a-sec-title">Revenue by Hour</div>
+    <div class="a-chart">
+      <div class="a-bars" id="adminChart"></div>
+    </div>
+  </div>
+
+  <div class="a-section">
+    <div class="a-sec-title">Top Dishes Today</div>
+    <div class="a-orders-table" id="adminTopDishes"></div>
+  </div>
+
+  <div class="a-section">
+    <div class="a-sec-title">Recent Orders</div>
+    <div class="a-orders-table" id="adminOrders">
+      <div class="a-orders-row head">
+        <div class="aor-id">Order</div>
+        <div class="aor-table">Table</div>
+        <div class="aor-items">Items</div>
+        <div class="aor-amt">Total</div>
+        <div class="aor-status">Status</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="a-section" style="padding-bottom:40px">
+    <div class="a-sec-title">Menu Availability</div>
+    <div id="adminMenuToggles"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// SHARED STATE — the single source of truth
+// Uses localStorage to sync across panels
+// ════════════════════════════════════════
+const STORE_KEY = 'vrindavan_live';
+const ALERTS_KEY = 'vrindavan_alerts';
+
+function getStore() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {orders:[], menuOverrides:{}}; }
+  catch { return {orders:[], menuOverrides:{}}; }
+}
+function setStore(data) { localStorage.setItem(STORE_KEY, JSON.stringify(data)); }
+function getAlerts() {
+  try { return JSON.parse(localStorage.getItem(ALERTS_KEY)) || []; }
+  catch { return []; }
+}
+function setAlerts(a) { localStorage.setItem(ALERTS_KEY, JSON.stringify(a)); }
+
+function pushOrder(order) {
+  const s = getStore();
+  s.orders.unshift(order);
+  if (s.orders.length > 200) s.orders = s.orders.slice(0,200);
+  setStore(s);
+}
+function updateOrderStatus(orderId, status) {
+  const s = getStore();
+  const o = s.orders.find(x=>x.id===orderId);
+  if (o) { o.status = status; o.updatedAt = Date.now(); setStore(s); }
+}
+function pushAlert(alert) {
+  const a = getAlerts();
+  a.unshift({...alert, id: Date.now(), ts: Date.now(), acked: false});
+  if (a.length > 50) a.splice(50);
+  setAlerts(a);
+}
+function ackAlert(id) {
+  const a = getAlerts();
+  const al = a.find(x=>x.id===id);
+  if (al) { al.acked=true; setAlerts(a); }
+}
+
+// ════════════════════════════════════════
+// CONFIG & TRANSLATIONS (from original)
+// ════════════════════════════════════════
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3001/api' : '/api';
+
+const T = {
+  en: {
+    tagline:'Pure Veg · Est. 1995','nav-tagline':'Pure Veg · Est. 1995',
+    'hero-title':'Pure Flavours,\nTimeless Tradition','call-waiter':'Call Waiter',
+    'waiter-called':'Waiter Called ✓',cart:'Cart','view-cart':'View Cart →',
+    'your-cart':'Your Cart','special-instr':'Special Instructions (optional)',
+    total:'Total','place-order':'Place Order →',continue:'Continue Ordering',
+    'ar-sub':'View this dish in Augmented Reality on your table',
+    'ar-hint':'Tap below to launch AR','launch-ar':'Launch AR View',close:'Close',
+    'wait-title':'Your order is being prepared!',
+    'wait-sub':'Our kitchen has received your order. Please wait — we\'ll serve you shortly.',
+    'order-id':'Order ID','order-more':'Order More Items',enter:'Enter Menu',all:'All',
+    categories:{Starters:'Starters','Main Course':'Main Course',Breads:'Breads',Beverages:'Beverages',Desserts:'Desserts'},
+    special:'★ Special','pure-veg':'Pure Veg','sold-out':'SOLD OUT','ar-view':'AR View',
+  },
+  hi: {
+    tagline:'शुद्ध शाकाहारी · स्था. 1995','nav-tagline':'शुद्ध शाकाहारी · स्था. 1995',
+    'hero-title':'शुद्ध स्वाद,\nशाश्वत परंपरा','call-waiter':'वेटर बुलाएं',
+    'waiter-called':'वेटर बुलाया ✓',cart:'कार्ट','view-cart':'कार्ट देखें →',
+    'your-cart':'आपका कार्ट','special-instr':'विशेष निर्देश (वैकल्पिक)',
+    total:'कुल','place-order':'ऑर्डर करें →',continue:'और ऑर्डर करें',
+    'ar-sub':'इस डिश को अपनी टेबल पर AR में देखें',
+    'ar-hint':'AR लॉन्च करने के लिए नीचे टैप करें','launch-ar':'AR व्यू खोलें',close:'बंद करें',
+    'wait-title':'आपका ऑर्डर तैयार हो रहा है!',
+    'wait-sub':'हमारी किचन को आपका ऑर्डर मिल गया है। कृपया प्रतीक्षा करें।',
+    'order-id':'ऑर्डर आईडी','order-more':'और आइटम ऑर्डर करें',enter:'मेनू देखें',all:'सभी',
+    categories:{Starters:'स्टार्टर','Main Course':'मुख्य व्यंजन',Breads:'रोटी',Beverages:'पेय',Desserts:'मिठाई'},
+    special:'★ विशेष','pure-veg':'शुद्ध शाक.','sold-out':'उपलब्ध नहीं','ar-view':'AR देखें',
+  }
+};
+
+// ════════════════════════════════════════
+// CUSTOMER STATE
+// ════════════════════════════════════════
+let lang = 'en';
+let isDark = false;
+let menuData = {};
+let cart = {};
+let session = null;
+let tableNum = null;
+let currentCat = 'all';
+let waiterCalled = false;
+let orderCounter = Math.floor(Math.random()*900+100);
+let activeOrderId = null;
+let statusPollTimer = null;
+
+const catOrder = ['Starters','Main Course','Breads','Beverages','Desserts'];
+
+const fallback = {
+  Starters:[
+    {id:1,name:'Paneer Tikka',name_hi:'पनीर टिक्का',category:'Starters',price:280,is_veg:true,in_stock:true,is_special:true,description:'Marinated cottage cheese grilled to perfection',description_hi:'मसालेदार पनीर को तंदूर में पका कर',emoji:'🥘'},
+    {id:2,name:'Hara Bhara Kabab',name_hi:'हरा भरा कबाब',category:'Starters',price:220,is_veg:true,in_stock:true,is_special:false,description:'Spinach and peas kabab',description_hi:'पालक और मटर का कबाब',emoji:'🌿'},
+    {id:3,name:'Dahi Puri',name_hi:'दही पूरी',category:'Starters',price:180,is_veg:true,in_stock:false,is_special:false,description:'Crispy puris with spiced yoghurt',description_hi:'दही के साथ कुरकुरी पूरी',emoji:'🫙'},
+    {id:4,name:'Aloo Tikki',name_hi:'आलू टिक्की',category:'Starters',price:160,is_veg:true,in_stock:true,is_special:false,description:'Crispy potato patties with chutneys',description_hi:'कुरकुरी आलू की टिक्की चटनी के साथ',emoji:'🟡'},
+  ],
+  'Main Course':[
+    {id:5,name:'Paneer Butter Masala',name_hi:'पनीर बटर मसाला',category:'Main Course',price:320,is_veg:true,in_stock:true,is_special:true,description:'Rich tomato-cream gravy with cottage cheese',description_hi:'टमाटर क्रीम ग्रेवी में पनीर',emoji:'🍛'},
+    {id:6,name:'Dal Makhani',name_hi:'दाल मखनी',category:'Main Course',price:260,is_veg:true,in_stock:true,is_special:false,description:'Slow-cooked black lentils in butter gravy',description_hi:'मक्खन ग्रेवी में उड़द दाल',emoji:'🫘'},
+    {id:7,name:'Shahi Paneer',name_hi:'शाही पनीर',category:'Main Course',price:340,is_veg:true,in_stock:true,is_special:false,description:'Royal cottage cheese in cashew cream',description_hi:'काजू क्रीम सॉस में पनीर',emoji:'👑'},
+    {id:8,name:'Masala Dosa',name_hi:'मसाला डोसा',category:'Main Course',price:180,is_veg:true,in_stock:true,is_special:false,description:'Crispy rice crepe with spiced potato',description_hi:'मसालेदार आलू भरा क्रिस्पी डोसा',emoji:'🫓'},
+    {id:9,name:'Veg Biryani',name_hi:'वेज बिरयानी',category:'Main Course',price:280,is_veg:true,in_stock:true,is_special:false,description:'Aromatic basmati rice with vegetables',description_hi:'सुगंधित बासमती चावल सब्जियों के साथ',emoji:'🍚'},
+    {id:10,name:'Kadhai Paneer',name_hi:'कढ़ाई पनीर',category:'Main Course',price:300,is_veg:true,in_stock:true,is_special:false,description:'Cottage cheese with bell peppers',description_hi:'शिमला मिर्च के साथ पनीर',emoji:'🥘'},
+  ],
+  Breads:[
+    {id:11,name:'Garlic Naan',name_hi:'गार्लिक नान',category:'Breads',price:60,is_veg:true,in_stock:true,is_special:false,description:'Soft leavened bread with garlic butter',description_hi:'लहसुन मक्खन के साथ नरम नान',emoji:'🫓'},
+    {id:12,name:'Tandoori Roti',name_hi:'तंदूरी रोटी',category:'Breads',price:40,is_veg:true,in_stock:true,is_special:false,description:'Whole wheat bread from tandoor',description_hi:'तंदूर की गेहूं की रोटी',emoji:'🫓'},
+    {id:13,name:'Laccha Paratha',name_hi:'लच्छा पराठा',category:'Breads',price:70,is_veg:true,in_stock:true,is_special:false,description:'Layered flaky whole wheat paratha',description_hi:'परतदार गेहूं का पराठा',emoji:'🫓'},
+  ],
+  Beverages:[
+    {id:14,name:'Mango Lassi',name_hi:'आम की लस्सी',category:'Beverages',price:120,is_veg:true,in_stock:true,is_special:false,description:'Chilled mango yoghurt drink',description_hi:'ठंडी आम की लस्सी',emoji:'🥭'},
+    {id:15,name:'Masala Chaas',name_hi:'मसाला छाछ',category:'Beverages',price:80,is_veg:true,in_stock:true,is_special:false,description:'Spiced buttermilk with herbs',description_hi:'मसालेदार छाछ',emoji:'🥛'},
+    {id:16,name:'Filter Coffee',name_hi:'फिल्टर कॉफी',category:'Beverages',price:60,is_veg:true,in_stock:true,is_special:false,description:'South Indian style drip coffee',description_hi:'दक्षिण भारतीय कॉफी',emoji:'☕'},
+    {id:17,name:'Kokum Sharbat',name_hi:'कोकम शरबत',category:'Beverages',price:90,is_veg:true,in_stock:true,is_special:false,description:'Traditional Kokum coolant',description_hi:'परंपरागत कोकम शरबत',emoji:'🧃'},
+  ],
+  Desserts:[
+    {id:18,name:'Gulab Jamun',name_hi:'गुलाब जामुन',category:'Desserts',price:120,is_veg:true,in_stock:true,is_special:false,description:'Soft milk-solid dumplings in rose syrup',description_hi:'गुलाब की चाशनी में गुलाब जामुन',emoji:'🟤'},
+    {id:19,name:'Ras Malai',name_hi:'रस मलाई',category:'Desserts',price:160,is_veg:true,in_stock:true,is_special:true,description:'Chenna dumplings in saffron milk',description_hi:'केसर दूध में रस मलाई',emoji:'🍮'},
+    {id:20,name:'Gajar Halwa',name_hi:'गाजर का हलवा',category:'Desserts',price:150,is_veg:true,in_stock:true,is_special:false,description:'Slow-cooked carrot pudding with ghee',description_hi:'घी में बना गाजर का हलवा',emoji:'🥕'},
+  ]
+};
+
+// ════════════════════════════════════════
+// PANEL SWITCHER
+// ════════════════════════════════════════
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.pnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(name+'Panel').classList.add('active');
+  event.currentTarget.classList.add('active');
+
+  if (name==='kitchen') renderKitchen();
+  if (name==='waiter') renderWaiter();
+  if (name==='admin') renderAdmin();
+}
+
+// ════════════════════════════════════════
+// CUSTOMER — INIT & LANG
+// ════════════════════════════════════════
+function init() {
+  const params = new URLSearchParams(window.location.search);
+  tableNum = params.get('table') || params.get('t') || '1';
+  document.getElementById('tableBadge').textContent = `Table ${tableNum}`;
+  document.getElementById('waitTableBadge').textContent = `Table ${tableNum}`;
+  applyLang();
+
+  // Seed some demo orders so kitchen/admin have something to show
+  seedDemoOrders();
+}
+
+function seedDemoOrders() {
+  const s = getStore();
+  if (s.orders.length === 0) {
+    const demos = [
+      {id:'demo-1',orderId:'VR-0101',table:'3',items:[{id:5,name:'Paneer Butter Masala',qty:2,price:320},{id:11,name:'Garlic Naan',qty:4,price:60}],total:880,status:'cooking',createdAt:Date.now()-8*60000,updatedAt:Date.now()-3*60000,customer:'Rahul',instructions:''},
+      {id:'demo-2',orderId:'VR-0102',table:'7',items:[{id:1,name:'Paneer Tikka',qty:1,price:280},{id:19,name:'Ras Malai',qty:2,price:160}],total:600,status:'pending',createdAt:Date.now()-2*60000,updatedAt:Date.now()-2*60000,customer:'Priya',instructions:'Less spicy'},
+      {id:'demo-3',orderId:'VR-0103',table:'2',items:[{id:6,name:'Dal Makhani',qty:1,price:260},{id:13,name:'Laccha Paratha',qty:2,price:70},{id:14,name:'Mango Lassi',qty:2,price:120}],total:640,status:'ready',createdAt:Date.now()-18*60000,updatedAt:Date.now()-5*60000,customer:'Amit',instructions:''},
+      {id:'demo-4',orderId:'VR-0100',table:'5',items:[{id:9,name:'Veg Biryani',qty:2,price:280}],total:560,status:'served',createdAt:Date.now()-35*60000,updatedAt:Date.now()-25*60000,customer:'Sneha',instructions:''},
+    ];
+    s.orders = demos;
+    setStore(s);
+
+    // seed a waiter call alert
+    pushAlert({type:'waiter-call',table:'6',message:'Table 6 called for the waiter'});
+  }
+}
+
+function setLang(l,btn){lang=l;document.querySelectorAll('.lang-opt').forEach(b=>b.classList.remove('active'));btn.classList.add('active');applyLang();}
+function toggleLang(){lang=lang==='en'?'hi':'en';document.getElementById('langToggleBtn').textContent=lang==='en'?'EN':'हि';document.querySelectorAll('.lang-opt').forEach((b,i)=>{b.classList.toggle('active',(i===0&&lang==='en')||(i===1&&lang==='hi'));});applyLang();renderMenu();renderCats();}
+function t(key){return T[lang][key]||T['en'][key]||key;}
+
+function applyLang(){
+  const map={'lbl-tagline':'tagline','lbl-nav-tagline':'nav-tagline','lbl-call-waiter':waiterCalled?'waiter-called':'call-waiter','lbl-cart':'cart','lbl-view-cart':'view-cart','lbl-your-cart':'your-cart','lbl-special-instr':'special-instr','lbl-total':'total','lbl-place-order':'place-order','lbl-continue':'continue','lbl-ar-sub':'ar-sub','lbl-ar-hint':'ar-hint','lbl-launch-ar':'launch-ar','lbl-close':'close','lbl-wait-title':'wait-title','lbl-wait-sub':'wait-sub','lbl-order-id':'order-id','lbl-order-more':'order-more','infoBtn':'enter'};
+  Object.entries(map).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.textContent=t(key);});
+  const heroEl=document.getElementById('lbl-hero-title');
+  if(heroEl){const parts=t('hero-title').split('\n');heroEl.innerHTML=`${parts[0]}<br><em>${parts[1]}</em>`;}
+  const si=document.getElementById('searchInput');if(si)si.placeholder=lang==='hi'?'व्यंजन खोजें...':'Search dishes...';
+  const lb=document.getElementById('langToggleBtn');if(lb)lb.textContent=lang==='en'?'EN':'हि';
+}
+
+// ════════════════════════════════════════
+// CUSTOMER — SESSION
+// ════════════════════════════════════════
+function validateInfo(){
+  const name=document.getElementById('custName').value.trim();
+  const mobile=document.getElementById('custMobile').value.trim();
+  document.getElementById('infoBtn').disabled=!(name.length>=2&&/^[0-9]{10}$/.test(mobile));
+}
+
+async function startSession(){
+  const name=document.getElementById('custName').value.trim();
+  const mobile=document.getElementById('custMobile').value.trim();
+  const err=document.getElementById('infoErr');
+  const btn=document.getElementById('infoBtn');
+  if(!/^[0-9]{10}$/.test(mobile)){err.textContent=lang==='hi'?'10 अंकों का मोबाइल नंबर दर्ज करें':'Enter a valid 10-digit mobile number';err.style.display='block';return;}
+  err.style.display='none';
+  btn.disabled=true;
+  btn.textContent=lang==='hi'?'लोड हो रहा है...':'Please wait...';
+
+  try {
+    const res=await fetch(`${API}/session`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({table_number:parseInt(tableNum),name,mobile})});
+    const data=await res.json();
+    if(data.success){
+      session={token:data.session_token,name,mobile,table:tableNum,isReturning:data.is_returning};
+      if(data.is_returning)document.getElementById('heroInfo').textContent=lang==='hi'?`वापस आए, ${name}! 👋`:`Welcome back, ${name}! 👋`;
+    } else {
+      err.textContent=data.error||'Something went wrong';err.style.display='block';
+      btn.disabled=false;btn.textContent=t('enter');return;
+    }
+  } catch {
+    session={name,mobile,table:tableNum,token:'demo'};
+  }
+
+  document.getElementById('infoScreen').style.display='none';
+  document.getElementById('customerView').classList.add('active');
+  await loadMenu();renderCats();renderMenu();
+}
+
+async function loadMenu(){
+  // Apply any admin menu overrides (stock toggles)
+  const s = getStore();
+  const overrides = s.menuOverrides || {};
+
+  try {
+    const res=await fetch(`${API}/menu`);
+    const data=await res.json();
+    if(data.success){menuData=data.data;applyOverrides(overrides);return;}
+  } catch{}
+  menuData=JSON.parse(JSON.stringify(fallback));
+  applyOverrides(overrides);
+}
+
+function applyOverrides(overrides){
+  Object.keys(menuData).forEach(cat=>{
+    menuData[cat].forEach(d=>{
+      if(overrides[d.id]!==undefined) d.in_stock=overrides[d.id];
+    });
+  });
+}
+
+function renderCats(){
+  const bar=document.getElementById('catBar');
+  let html=`<button class="cat ${currentCat==='all'?'active':''}" onclick="setCat('all',this)">${t('all')}</button>`;
+  catOrder.forEach(cat=>{if(menuData[cat]?.length)html+=`<button class="cat ${currentCat===cat?'active':''}" onclick="setCat('${cat}',this)">${t('categories')[cat]||cat}</button>`;});
+  bar.innerHTML=html;
+}
+
+function renderMenu(){
+  const q=document.getElementById('searchInput')?.value?.toLowerCase()||'';
+  const root=document.getElementById('menuRoot');
+  let html='';
+  catOrder.forEach(cat=>{
+    if(currentCat!=='all'&&currentCat!==cat)return;
+    const items=(menuData[cat]||[]).filter(d=>{const n=lang==='hi'?(d.name_hi||d.name):d.name;return n.toLowerCase().includes(q)||d.name.toLowerCase().includes(q);});
+    if(!items.length)return;
+    const catLabel=lang==='hi'?(T.hi.categories[cat]||cat):cat;
+    html+=`<div class="sec-label">${catLabel}</div><div class="menu-list">`;
+    items.forEach(d=>{
+      const qty=cart[d.id]?.qty||0;
+      const name=lang==='hi'?(d.name_hi||d.name):d.name;
+      const desc=lang==='hi'?(d.description_hi||d.description||''):(d.description||'');
+      const emoji=d.emoji||'🍽️';
+      html+=`<div class="dish${!d.in_stock?' unavailable':''}">
+        <div class="veg-dot ${d.is_veg?'veg':'nonveg'}"></div>
+        <div class="dish-body">
+          ${d.is_special?`<div class="special-tag">${t('special')}</div>`:''}
+          <div class="dish-name">${name}</div>
+          <div class="dish-desc">${desc}</div>
+          <div class="dish-price">₹${d.price}</div>
+        </div>
+        <div class="dish-actions">
+          <button class="ar-btn" onclick="openAR('${name.replace(/'/g,"\\'")}','${emoji}')">${t('ar-view')}</button>
+          ${d.in_stock
+            ? qty>0
+              ? `<div class="qty-ctrl"><button class="qty-btn" onclick="changeQty(${d.id},-1,${d.price})">−</button><div class="qty-num">${qty}</div><button class="qty-btn" onclick="changeQty(${d.id},1,${d.price})">+</button></div>`
+              : `<button class="add-btn" onclick="changeQty(${d.id},1,${d.price})">+</button>`
+            : `<div class="sold-tag">${t('sold-out')}</div>`
+          }
+        </div>
+      </div>`;
+    });
+    html+='</div><div class="spacer"></div>';
+  });
+  root.innerHTML=html||`<div style="text-align:center;padding:48px 0;color:var(--muted);font-size:14px;">${lang==='hi'?'कोई व्यंजन नहीं मिला':'No dishes found'}</div>`;
+  updateCartUI();
+}
+
+function changeQty(id,delta,price){
+  if(!cart[id])cart[id]={qty:0,price};
+  cart[id].qty=Math.max(0,cart[id].qty+delta);
+  if(cart[id].qty===0)delete cart[id];
+  renderMenu();
+}
+
+function updateCartUI(){
+  const count=Object.values(cart).reduce((a,b)=>a+b.qty,0);
+  const total=Object.values(cart).reduce((a,b)=>a+b.qty*b.price,0);
+  document.getElementById('navCount').textContent=count;
+  document.getElementById('cartBarItems').textContent=`${count} ${lang==='hi'?'आइटम':'item'}${count!==1&&lang==='en'?'s':''}`;
+  document.getElementById('cartBarTotal').textContent=`₹${total}`;
+  const bar=document.getElementById('cartBar');
+  count>0?bar.classList.add('visible'):bar.classList.remove('visible');
+}
+
+function openCart(){
+  const count=Object.values(cart).reduce((a,b)=>a+b.qty,0);
+  if(count===0){toast(lang==='hi'?'कार्ट खाली है':'Cart is empty — add some dishes!');return;}
+  const total=Object.values(cart).reduce((a,b)=>a+b.qty*b.price,0);
+  document.getElementById('cartSheetSub').textContent=`${count} ${lang==='hi'?'आइटम':'item'}${count!==1&&lang==='en'?'s':''}`;
+  document.getElementById('cartSheetTotal').textContent=`₹${total}`;
+  const allItems=Object.values(menuData).flat();
+  let html='';
+  Object.entries(cart).forEach(([id,{qty,price}])=>{
+    const d=allItems.find(x=>x.id===parseInt(id));if(!d)return;
+    const name=lang==='hi'?(d.name_hi||d.name):d.name;
+    html+=`<div class="cart-item"><div class="ci-dot veg"></div><div class="ci-name">${name}</div><div class="ci-qty">×${qty}</div><div class="ci-price">₹${price*qty}</div></div>`;
+  });
+  document.getElementById('cartSheetItems').innerHTML=html;
+  applyLang();openSheet('cartOverlay');
+}
+
+async function placeOrder(){
+  const count=Object.values(cart).reduce((a,b)=>a+b.qty,0);
+  if(count===0)return;
+  const btn=document.getElementById('placeOrderBtn');
+  btn.disabled=true;
+  btn.textContent=lang==='hi'?'ऑर्डर हो रहा है...':'Placing order...';
+
+  const allItems=Object.values(menuData).flat();
+  const items=Object.entries(cart).map(([id,{qty,price}])=>{
+    const d=allItems.find(x=>x.id===parseInt(id));
+    return {id:parseInt(id),name:d?d.name:'Item',qty,price};
+  });
+  const total=Object.values(cart).reduce((a,b)=>a+b.qty*b.price,0);
+  const instructions=document.getElementById('specialInstr').value.trim();
+
+  // Try real API first
+  try {
+    const res=await fetch(`${API}/orders`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session?.token}`},body:JSON.stringify({items:items.map(i=>({id:i.id,qty:i.qty})),special_instructions:instructions,payment_method:'cod'})});
+    const data=await res.json();
+    if(data.success){
+      const orderId=data.order_id;
+      activeOrderId='VR-'+String(orderId).padStart(4,'0');
+      showOrderSuccess(orderId);
+      btn.disabled=false;btn.textContent=t('place-order');
+      return;
+    }
+  } catch{}
+
+  // Demo / offline mode — save to localStorage so kitchen/waiter see it
+  orderCounter++;
+  const orderId='VR-'+String(orderCounter).padStart(4,'0');
+  activeOrderId=orderId;
+
+  const order={
+    id:orderId,orderId,
+    table:tableNum,
+    items,total,
+    status:'pending',
+    customer:session?.name||'Guest',
+    instructions,
+    createdAt:Date.now(),
+    updatedAt:Date.now()
+  };
+  pushOrder(order);
+  pushAlert({type:'new-order',table:tableNum,message:`New order from Table ${tableNum} — ${count} item${count!==1?'s':''}`,orderId});
+
+  showOrderSuccess(orderCounter);
+  btn.disabled=false;btn.textContent=t('place-order');
+}
+
+function showOrderSuccess(orderId){
+  cart={};
+  document.getElementById('specialInstr').value='';
+  updateCartUI();
+  closeSheet('cartOverlay');
+
+  const oid='VR-'+String(orderId).padStart(4,'0');
+  document.getElementById('waitOrderId').textContent=`#${oid}`;
+  document.getElementById('waitTableBadge').textContent=`Table ${tableNum}`;
+  applyLang();
+
+  document.getElementById('customerView').classList.remove('active');
+  document.getElementById('waitingScreen').classList.add('active');
+
+  // Start polling for live status updates
+  startStatusPolling(oid);
+}
+
+// ── Live order status tracking on waiting screen ──
+function startStatusPolling(orderId){
+  if(statusPollTimer)clearInterval(statusPollTimer);
+  updateStatusUI(orderId);
+  statusPollTimer=setInterval(()=>updateStatusUI(orderId),2000);
+}
+
+function updateStatusUI(orderId){
+  const s=getStore();
+  const order=s.orders.find(o=>o.orderId===orderId||o.id===orderId);
+  if(!order)return;
+
+  const statusMap={pending:1,cooking:2,ready:3,served:4};
+  const step=statusMap[order.status]||1;
+
+  const steps=['placed','confirmed','cooking','ready','served'];
+  steps.forEach((name,i)=>{
+    const el=document.getElementById('ost-'+name);
+    if(!el)return;
+    el.classList.remove('done','active');
+    if(i<step)el.classList.add('done');
+    else if(i===step)el.classList.add('active');
+  });
+
+  // Update subtitle
+  const msgs={pending:'Kitchen confirmed your order!',cooking:'Your food is being prepared 🔥',ready:'Your order is ready! Waiter is coming 🎉',served:'Served! Enjoy your meal 🙏'};
+  if(msgs[order.status]){
+    document.getElementById('lbl-wait-sub').textContent=msgs[order.status];
+  }
+
+  if(order.status==='served'&&statusPollTimer){
+    clearInterval(statusPollTimer);statusPollTimer=null;
+  }
+}
+
+function orderMore(){
+  if(statusPollTimer){clearInterval(statusPollTimer);statusPollTimer=null;}
+  document.getElementById('waitingScreen').classList.remove('active');
+  document.getElementById('customerView').classList.add('active');
+  renderMenu();
+}
+
+async function callWaiter(){
+  if(waiterCalled)return;
+  waiterCalled=true;
+  const btn=document.getElementById('waiterCallBtn');
+  btn.classList.add('called');
+  document.getElementById('lbl-call-waiter').textContent=t('waiter-called');
+  toast(lang==='hi'?'वेटर बुलाया गया है 🙋':'Waiter has been called 🙋');
+
+  pushAlert({type:'waiter-call',table:tableNum,message:`Table ${tableNum} is calling for a waiter`});
+
+  try {
+    await fetch(`${API}/waiter-call`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':`Bearer ${session?.token}`},body:JSON.stringify({table:tableNum})});
+  } catch{}
+
+  setTimeout(()=>{
+    waiterCalled=false;btn.classList.remove('called');
+    document.getElementById('lbl-call-waiter').textContent=t('call-waiter');
+  },30000);
+}
+
+function openAR(name,emoji){document.getElementById('arName').textContent=name;document.getElementById('arEmoji').textContent=emoji;applyLang();openSheet('arOverlay');}
+function launchAR(){toast(lang==='hi'?'AR लॉन्च हो रहा है...':'Launching AR... (attach .glb model in production)');closeSheet('arOverlay');}
+function setCat(cat,btn){currentCat=cat;document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderMenu();}
+function openSheet(id){document.getElementById(id).classList.add('open');}
+function closeSheet(id){document.getElementById(id).classList.remove('open');}
+function toggleTheme(){isDark=!isDark;document.body.classList.toggle('dark',isDark);document.getElementById('themeBtn').textContent=isDark?'☀️':'🌙';}
+
+let toastTimer;
+function toast(msg){
+  const el=document.getElementById('toastEl');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600);
+}
+
+// ════════════════════════════════════════
+// KITCHEN PANEL
+// ════════════════════════════════════════
+function renderKitchen(){
+  const s=getStore();
+  const orders=s.orders.filter(o=>o.status!=='served');
+
+  const pending=orders.filter(o=>o.status==='pending');
+  const cooking=orders.filter(o=>o.status==='cooking');
+  const ready=orders.filter(o=>o.status==='ready');
+
+  document.getElementById('kStatPending').textContent=pending.length;
+  document.getElementById('kStatCooking').textContent=cooking.length;
+  document.getElementById('kStatReady').textContent=ready.length;
+  document.getElementById('kColPendingCount').textContent=pending.length;
+  document.getElementById('kColCookingCount').textContent=cooking.length;
+  document.getElementById('kColReadyCount').textContent=ready.length;
+
+  document.getElementById('kColPending').innerHTML=pending.map(o=>kitchenCard(o,'pending')).join('')||'<div class="k-empty">No new orders</div>';
+  document.getElementById('kColCooking').innerHTML=cooking.map(o=>kitchenCard(o,'cooking')).join('')||'<div class="k-empty">Nothing cooking</div>';
+  document.getElementById('kColReady').innerHTML=ready.map(o=>kitchenCard(o,'ready')).join('')||'<div class="k-empty">Nothing ready</div>';
+}
+
+function kitchenCard(order,status){
+  const age=Math.floor((Date.now()-order.createdAt)/60000);
+  const timeClass=age>20?'urgent':age>10?'warn':'ok';
+  const timeLabel=age<1?'just now':`${age}m ago`;
+  const isUrgent=age>20;
+
+  const itemsHtml=order.items.map(i=>`
+    <div class="k-item"><span class="k-item-qty">×${i.qty}</span>${i.name}</div>
+  `).join('');
+  const noteHtml=order.instructions?`<div class="k-item-note">📝 ${order.instructions}</div>`:'';
+
+  const actions = status==='pending'
+    ? `<button class="k-btn start" onclick="kitchenAction('${order.id||order.orderId}','cooking')">Start Cooking</button>`
+    : status==='cooking'
+    ? `<button class="k-btn done" onclick="kitchenAction('${order.id||order.orderId}','ready')">Mark Ready</button>`
+    : `<button class="k-btn served" onclick="kitchenAction('${order.id||order.orderId}','served')">Served ✓</button>`;
+
+  return `<div class="k-card${isUrgent?' urgent':''}">
+    <div class="k-card-head">
+      <span class="k-order-id">#${order.orderId||order.id}</span>
+      <span class="k-table">Table ${order.table}</span>
+      <span class="k-time ${timeClass}">${timeLabel}</span>
+    </div>
+    <div class="k-card-body">${itemsHtml}${noteHtml}</div>
+    <div class="k-card-actions">${actions}</div>
+  </div>`;
+}
+
+function kitchenAction(orderId,newStatus){
+  updateOrderStatus(orderId,newStatus);
+
+  // Push alert to waiter if order is ready
+  if(newStatus==='ready'){
+    const s=getStore();
+    const order=s.orders.find(o=>o.id===orderId||o.orderId===orderId);
+    if(order) pushAlert({type:'order-ready',table:order.table,message:`Order #${order.orderId||order.id} for Table ${order.table} is ready to serve!`,orderId});
+  }
+
+  renderKitchen();
+}
+
+// Auto-refresh kitchen every 5s when on that panel
+setInterval(()=>{
+  if(document.getElementById('kitchenPanel').classList.contains('active')) renderKitchen();
+},5000);
+
+// ════════════════════════════════════════
+// WAITER PANEL
+// ════════════════════════════════════════
+let waiterActiveTab='alerts';
+
+function waiterTab(tab,btn){
+  waiterActiveTab=tab;
+  document.querySelectorAll('.w-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('wAlertsContent').classList.toggle('hidden',tab!=='alerts');
+  document.getElementById('wOrdersContent').classList.toggle('hidden',tab!=='orders');
+  renderWaiter();
+}
+
+function renderWaiter(){
+  const alerts=getAlerts().filter(a=>!a.acked);
+  const s=getStore();
+
+  // badge
+  document.getElementById('waiterAlertBadge').textContent=alerts.length;
+  document.getElementById('wAlertTabBadge').textContent=alerts.length;
+
+  if(waiterActiveTab==='alerts'||true){
+    const allAlerts=getAlerts();
+    const unacked=allAlerts.filter(a=>!a.acked);
+    const html=unacked.length===0
+      ? '<div style="text-align:center;padding:48px 0;color:var(--muted);font-size:13px">No pending alerts 👍</div>'
+      : unacked.map(a=>{
+          const icon=a.type==='waiter-call'?'🙋':a.type==='order-ready'?'✅':'🍽️';
+          const cls=a.type==='waiter-call'?'waiter-call':a.type==='order-ready'?'new':'';
+          const age=Math.floor((Date.now()-a.ts)/60000);
+          return `<div class="w-alert-card ${cls}">
+            <div class="w-alert-icon">${icon}</div>
+            <div class="w-alert-body">
+              <div class="w-alert-title">${a.message}</div>
+              <div class="w-alert-time">${age<1?'Just now':`${age}m ago`}</div>
+            </div>
+            <button class="w-ack-btn" onclick="waiterAck(${a.id})">Done ✓</button>
+          </div>`;
+        }).join('');
+    document.getElementById('wAlertsContent').innerHTML=html;
+  }
+
+  // Orders tab
+  const activeOrders=s.orders.filter(o=>o.status!=='served');
+  const ordersHtml=activeOrders.length===0
+    ? '<div style="text-align:center;padding:48px 0;color:var(--muted);font-size:13px">No active orders</div>'
+    : activeOrders.map(o=>{
+        const canServe=o.status==='ready';
+        return `<div class="w-order-card">
+          <div class="w-order-head">
+            <span class="w-order-id">#${o.orderId||o.id}</span>
+            <span class="w-order-table">Table ${o.table}</span>
+            <span class="w-status-pill ${o.status}">${o.status}</span>
+          </div>
+          <div class="w-order-items">${o.items.map(i=>`<div class="w-order-item"><span class="w-order-item-qty">×${i.qty}</span> ${i.name}</div>`).join('')}</div>
+          ${canServe?`<button class="w-serve-btn" onclick="waiterServe('${o.id||o.orderId}')">Mark as Served →</button>`:''}
+        </div>`;
+      }).join('');
+  document.getElementById('wOrdersContent').innerHTML=ordersHtml;
+}
+
+function waiterAck(alertId){
+  ackAlert(alertId);
+  renderWaiter();
+  toast('Alert cleared ✓');
+}
+
+function waiterServe(orderId){
+  updateOrderStatus(orderId,'served');
+  toast('Order marked as served!');
+  renderWaiter();
+}
+
+// Auto-refresh waiter every 5s
+setInterval(()=>{
+  if(document.getElementById('waiterPanel').classList.contains('active')) renderWaiter();
+},5000);
+
+// ════════════════════════════════════════
+// ADMIN PANEL
+// ════════════════════════════════════════
+function renderAdmin(){
+  const s=getStore();
+  const orders=s.orders;
+
+  // Date
+  document.getElementById('adminDate').textContent='Today · '+new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});
+
+  // Metrics
+  const todayOrders=orders.filter(o=>{const d=new Date(o.createdAt);const now=new Date();return d.toDateString()===now.toDateString();});
+  const totalRev=todayOrders.reduce((a,o)=>a+(o.total||0),0);
+  const servedCount=todayOrders.filter(o=>o.status==='served').length;
+  const avgOrder=todayOrders.length?Math.round(totalRev/todayOrders.length):0;
+  const tables=[...new Set(todayOrders.map(o=>o.table))].length;
+
+  document.getElementById('adminMetrics').innerHTML=`
+    <div class="a-metric">
+      <div class="a-metric-val">₹${totalRev.toLocaleString('en-IN')}</div>
+      <div class="a-metric-lbl">Revenue Today</div>
+      <div class="a-metric-delta up">↑ Live</div>
+    </div>
+    <div class="a-metric">
+      <div class="a-metric-val">${todayOrders.length}</div>
+      <div class="a-metric-lbl">Orders Today</div>
+      <div class="a-metric-delta up">${servedCount} served</div>
+    </div>
+    <div class="a-metric">
+      <div class="a-metric-val">₹${avgOrder}</div>
+      <div class="a-metric-lbl">Avg Order Value</div>
+    </div>
+    <div class="a-metric">
+      <div class="a-metric-val">${tables}</div>
+      <div class="a-metric-lbl">Tables Active</div>
+    </div>
+  `;
+
+  // Hourly chart
+  const hourBuckets={};
+  for(let h=11;h<=22;h++)hourBuckets[h]=0;
+  orders.forEach(o=>{
+    const h=new Date(o.createdAt).getHours();
+    if(hourBuckets[h]!==undefined)hourBuckets[h]+=(o.total||0);
+  });
+  const maxRev=Math.max(...Object.values(hourBuckets),1);
+  const chartHtml=Object.entries(hourBuckets).map(([h,v])=>`
+    <div class="a-bar-wrap">
+      <div class="a-bar-val">${v?'₹'+Math.round(v/100)+'K':''}</div>
+      <div class="a-bar" style="height:${Math.round((v/maxRev)*72)+8}px;opacity:${v?1:.3}"></div>
+      <div class="a-bar-lbl">${h>12?h-12+'PM':h==='12'?'12PM':h+'AM'}</div>
+    </div>
+  `).join('');
+  document.getElementById('adminChart').innerHTML=`<div class="a-chart-title">Revenue by Hour</div><div class="a-bars">${chartHtml}</div>`;
+
+  // Top dishes
+  const dishCounts={};
+  const dishRevs={};
+  orders.forEach(o=>{
+    (o.items||[]).forEach(i=>{
+      dishCounts[i.name]=(dishCounts[i.name]||0)+i.qty;
+      dishRevs[i.name]=(dishRevs[i.name]||0)+i.qty*(i.price||0);
+    });
+  });
+  const topDishes=Object.entries(dishCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxCount=topDishes[0]?topDishes[0][1]:1;
+  document.getElementById('adminTopDishes').innerHTML=`<div style="padding:0 14px">${topDishes.map(([name,count],i)=>`
+    <div class="a-dish-row">
+      <div class="a-dish-rank">${i+1}</div>
+      <div class="a-dish-info">
+        <div class="a-dish-name">${name}</div>
+        <div class="a-dish-count">${count} ordered</div>
+        <div class="a-bar-mini"><div class="a-bar-mini-fill" style="width:${Math.round(count/maxCount*100)}%"></div></div>
+      </div>
+      <div class="a-dish-rev">₹${(dishRevs[name]||0).toLocaleString('en-IN')}</div>
+    </div>
+  `).join('')||'<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No orders yet</div>'}</div>`;
+
+  // Orders table
+  const recentOrders=orders.slice(0,10);
+  const statusColors={pending:'#D97706',cooking:'#C8922A',ready:null,served:'#8a8780'};
+  const orderRows=recentOrders.map(o=>`
+    <div class="a-orders-row">
+      <div class="aor-id">#${o.orderId||o.id}</div>
+      <div class="aor-table">T${o.table}</div>
+      <div class="aor-items">${(o.items||[]).slice(0,2).map(i=>i.name).join(', ')}${(o.items||[]).length>2?'...':''}</div>
+      <div class="aor-amt">₹${o.total||0}</div>
+      <div class="aor-status"><span class="w-status-pill ${o.status}">${o.status}</span></div>
+    </div>
+  `).join('');
+  document.getElementById('adminOrders').innerHTML=`
+    <div class="a-orders-row head"><div class="aor-id">Order</div><div class="aor-table">Table</div><div class="aor-items">Items</div><div class="aor-amt">Total</div><div class="aor-status">Status</div></div>
+    ${orderRows||'<div style="padding:20px;text-align:center;color:var(--muted);font-size:13px">No orders yet</div>'}
+  `;
+
+  // Menu toggles
+  const overrides=s.menuOverrides||{};
+  const allItems=Object.values(fallback).flat();
+  document.getElementById('adminMenuToggles').innerHTML=allItems.map(d=>{
+    const isOn=overrides[d.id]!==undefined?overrides[d.id]:d.in_stock;
+    return `<div class="a-menu-item">
+      <div class="veg-dot ${d.is_veg?'veg':'nonveg'}" style="flex-shrink:0"></div>
+      <div class="a-menu-name">${d.name}</div>
+      <div class="a-menu-price">₹${d.price}</div>
+      <div class="toggle ${isOn?'on':''}" onclick="toggleMenuItem(${d.id},${!isOn})" title="${isOn?'Mark unavailable':'Mark available'}"></div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMenuItem(id,val){
+  const s=getStore();
+  if(!s.menuOverrides)s.menuOverrides={};
+  s.menuOverrides[id]=val;
+  setStore(s);
+  renderAdmin();
+  toast(val?'Item marked available':'Item marked sold out');
+}
+
+function resetDemoData(){
+  localStorage.removeItem(STORE_KEY);
+  localStorage.removeItem(ALERTS_KEY);
+  seedDemoOrders();
+  renderAdmin();
+  toast('Demo data reset');
+}
+
+// Auto-refresh admin every 8s
+setInterval(()=>{
+  if(document.getElementById('adminPanel').classList.contains('active')) renderAdmin();
+},8000);
+
+// ════════════════════════════════════════
+// START
+// ════════════════════════════════════════
+init();
+</script>
+</body>
+</html>

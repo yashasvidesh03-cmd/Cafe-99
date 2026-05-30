@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vrindavan — Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#F5F3EF;--surf:#FFFFFF;--surf2:#EFEDE8;--border:#E2DED6;
+  --text:#1C1A16;--muted:#8A8780;--accent:#C8922A;--accent-light:#F5EDD8;
+  --green:#2A7A4F;--red:#B83232;--orange:#C87400;--blue:#2563EB;--purple:#6D3FBD;
+  --dark:#1C1A16;
+}
+body{font-family:'Jost',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── LOGIN ────────────────────────────────── */
+#loginWrap{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;align-items:center;justify-content:center;padding:24px}
+.lb{width:100%;max-width:360px}
+.lb-logo{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;color:var(--text);margin-bottom:2px}
+.lb-sub{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:36px}
+.lf{margin-bottom:13px}
+.lf label{display:block;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px}
+.lf input{width:100%;background:var(--surf);border:1.5px solid var(--border);color:var(--text);padding:13px 14px;border-radius:10px;font-size:14px;font-family:'Jost',sans-serif;outline:none;transition:border-color .2s}
+.lf input:focus{border-color:var(--accent)}
+.lf input::placeholder{color:var(--muted)}
+.lerr{font-size:12px;color:var(--red);margin-bottom:12px;min-height:16px}
+.lbtn{width:100%;background:var(--dark);color:#fff;border:none;padding:14px;border-radius:10px;font-family:'Jost',sans-serif;font-weight:500;font-size:15px;cursor:pointer;transition:opacity .2s}
+.lbtn:hover{opacity:.88}.lbtn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── LAYOUT ───────────────────────────────── */
+#adminApp{display:none}
+#adminApp.on{display:flex;min-height:100vh}
+
+.sidebar{
+  width:196px;background:var(--surf);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:fixed;top:0;bottom:0;left:0;z-index:100;overflow-y:auto;
+}
+.sb-brand{padding:20px 18px 16px;border-bottom:1px solid var(--border)}
+.sb-logo{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--text)}
+.sb-role{font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.sb-sec{padding:18px 18px 6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.sb-item{padding:10px 18px;font-size:13px;color:var(--muted);cursor:pointer;display:flex;align-items:center;gap:9px;transition:all .18s;border-left:2px solid transparent}
+.sb-item:hover{color:var(--text);background:var(--surf2)}
+.sb-item.on{color:var(--accent);border-left-color:var(--accent);background:var(--accent-light);font-weight:500}
+.sb-footer{margin-top:auto;padding:14px 18px;border-top:1px solid var(--border)}
+.sb-user{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logout-btn{background:transparent;border:1px solid var(--border);color:var(--muted);padding:7px 14px;border-radius:8px;font-size:11px;cursor:pointer;font-family:'Jost',sans-serif;width:100%;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
+
+.main{margin-left:196px;flex:1;padding:24px;min-height:100vh}
+.page-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;color:var(--text);margin-bottom:4px}
+.page-sub{font-size:12px;color:var(--muted);margin-bottom:18px;display:flex;align-items:center;gap:6px}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 1.3s infinite;display:inline-block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.hidden{display:none!important}
+
+/* ── DATE BAR ─────────────────────────────── */
+.date-bar{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.date-bar label{font-size:11px;color:var(--muted);white-space:nowrap}
+.date-bar input[type=date]{background:var(--surf2);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;font-family:'Jost',sans-serif;font-size:12px;outline:none}
+.date-bar input[type=date]:focus{border-color:var(--accent)}
+.dbtn{padding:7px 14px;border-radius:7px;font-family:'Jost',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.dbtn.primary{background:var(--accent);color:#fff}.dbtn.primary:hover{opacity:.88}
+.dbtn.secondary{background:var(--surf2);color:var(--muted);border:1px solid var(--border)}.dbtn.secondary:hover{color:var(--text);border-color:var(--text)}
+
+/* ── KPI GRID ─────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:22px}
+@media(min-width:640px){.kpi-grid{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:16px}
+.kpi-lbl{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:8px}
+.kpi-val{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--text);line-height:1}
+.kpi-sub{font-size:11px;margin-top:5px;font-weight:500}
+.kpi-sub.up{color:var(--green)}.kpi-sub.na{color:var(--muted)}.kpi-sub.warn{color:var(--orange)}
+
+/* ── CHART CARD ───────────────────────────── */
+.chart-card{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:16px}
+.chart-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.chart-title span{font-size:11px;color:var(--muted);font-weight:400}
+.bars{display:flex;align-items:flex-end;gap:4px;height:96px}
+.bw{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+.bfill{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .5s cubic-bezier(.34,1.56,.64,1)}
+.bfill.rev{background:var(--accent)}
+.bfill.ord{background:var(--blue)}
+.bfill.zero{background:var(--border)}
+.blbl{font-size:8px;color:var(--muted);white-space:nowrap}
+.bval{font-size:8px;font-weight:600;color:var(--text);min-height:10px}
+
+/* ── SECTION TITLE ────────────────────────── */
+.sec-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:12px}
+
+/* ── DISH TABLE ───────────────────────────── */
+.dish-table{background:var(--surf);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px}
+.dt-head{display:grid;grid-template-columns:28px 1fr 70px 80px 70px;gap:8px;padding:10px 14px;background:var(--surf2);border-bottom:1px solid var(--border);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.dt-row{display:grid;grid-template-columns:28px 1fr 70px 80px 70px;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border);align-items:center;font-size:13px;transition:background .15s}
+.dt-row:last-child{border-bottom:none}
+.dt-row:hover{background:var(--surf2)}
+.dt-rank{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:600;color:var(--muted)}
+.dt-name{font-weight:500;color:var(--text)}
+.dt-cat{font-size:10px;color:var(--muted);margin-top:1px}
+.dt-bar-bg{height:3px;background:var(--border);border-radius:2px;margin-top:4px}
+.dt-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s}
+.num-right{text-align:right;font-weight:600}
+.rev-right{text-align:right;font-weight:600;color:var(--accent)}
+.avg-right{text-align:right;font-size:11px;color:var(--muted)}
+
+/* ── ORDERS TABLE ─────────────────────────── */
+.orders-wrap{background:var(--surf);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.ot-head{display:grid;grid-template-columns:110px 90px 1fr 80px 100px;gap:8px;padding:10px 14px;background:var(--surf2);border-bottom:1px solid var(--border);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.ot-row{display:grid;grid-template-columns:110px 90px 1fr 80px 100px;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
+.ot-row:last-child{border-bottom:none}
+.ot-row:hover{background:var(--surf2)}
+.ot-id{font-weight:600;color:var(--text);display:flex;align-items:center;gap:5px}
+.ot-cust{color:var(--text)}
+.ot-cust-phone{font-size:10px;color:var(--muted);margin-top:2px}
+.ot-items{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ot-amt{font-weight:600;text-align:right}
+.ot-status{text-align:right}
+.spill{font-size:9px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:3px 8px;border-radius:100px}
+.s-new{background:rgba(200,116,0,.12);color:var(--orange)}
+.s-preparing{background:rgba(37,99,235,.12);color:var(--blue)}
+.s-ready{background:rgba(42,122,79,.12);color:var(--green)}
+.s-served{background:rgba(109,63,189,.12);color:var(--purple)}
+.s-collected{background:rgba(42,122,79,.1);color:var(--green)}
+.s-cancelled{background:rgba(184,50,50,.12);color:var(--red)}
+
+/* print & status controls */
+.btn-print{background:transparent;border:1px solid var(--border);color:var(--muted);padding:3px 7px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .18s;margin-right:3px}
+.btn-print:hover{border-color:var(--accent);color:var(--accent)}
+.status-select{font-family:'Jost',sans-serif;font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;padding:4px 7px;border-radius:100px;border:none;outline:none;cursor:pointer;-webkit-appearance:none;text-align:center}
+.status-select option{background:#fff;color:#1C1A16}
+.status-select.new{background:rgba(200,116,0,.12);color:var(--orange)}
+.status-select.preparing{background:rgba(37,99,235,.12);color:var(--blue)}
+.status-select.ready{background:rgba(42,122,79,.12);color:var(--green)}
+.status-select.served{background:rgba(109,63,189,.12);color:var(--purple)}
+.status-select.collected{background:rgba(42,122,79,.1);color:var(--green)}
+.status-select.cancelled{background:rgba(184,50,50,.12);color:var(--red)}
+
+/* ── CATEGORY BREAKDOWN ───────────────────── */
+.cat-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.cat-row:last-child{border-bottom:none}
+.cat-name{flex:1;font-size:13px;font-weight:500}
+.cat-bar-wrap{width:100px}
+.cat-bar-bg{height:4px;background:var(--border);border-radius:2px}
+.cat-bar-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .5s}
+.cat-qty{font-size:11px;color:var(--muted);width:48px;text-align:right}
+.cat-rev{font-size:13px;font-weight:600;color:var(--accent);width:72px;text-align:right}
+
+/* ── REVENUE KPIs ─────────────────────────── */
+.rev-kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+@media(min-width:640px){.rev-kpi-grid{grid-template-columns:repeat(4,1fr)}}
+
+/* ── MENU TOGGLES ─────────────────────────── */
+.menu-cat-title{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:600;margin:18px 0 8px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.menu-item{background:var(--surf);border:1px solid var(--border);border-radius:10px;padding:11px 14px;margin-bottom:7px;display:flex;align-items:center;gap:10px}
+.mi-veg{width:8px;height:8px;border-radius:1.5px;background:var(--green);flex-shrink:0}
+.mi-name{flex:1;font-size:13px;font-weight:500}
+.mi-cat{font-size:10px;color:var(--muted)}
+.mi-price{font-size:12px;color:var(--muted);margin-right:8px}
+.toggle{width:38px;height:21px;background:var(--border);border-radius:100px;cursor:pointer;position:relative;transition:background .22s;flex-shrink:0}
+.toggle.on{background:var(--green)}
+.toggle::after{content:'';position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .22s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(17px)}
+
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:all .25s;z-index:9999;pointer-events:none}
+.toast.show{opacity:1}
+
+/* MOBILE */
+@media(max-width:640px){
+  .sidebar{width:100%;height:52px;flex-direction:row;bottom:auto;overflow-x:auto;overflow-y:hidden}
+  .sb-brand,.sb-sec,.sb-footer{display:none}
+  .sb-item{padding:14px 12px;border-left:none;border-bottom:2px solid transparent;white-space:nowrap;font-size:12px}
+  .sb-item.on{border-bottom-color:var(--accent);background:transparent}
+  .main{margin-left:0;margin-top:52px;padding:14px}
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .dt-head,.dt-row{grid-template-columns:24px 1fr 60px 70px}
+  .dt-head>:last-child,.dt-row>:last-child{display:none}
+  .ot-head,.ot-row{grid-template-columns:90px 80px 1fr 70px}
+  .ot-head>:last-child,.ot-row>:last-child{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginWrap">
+  <div class="lb">
+    <div class="lb-logo">Vrindavan</div>
+    <div class="lb-sub">Admin Dashboard</div>
+    <div class="lf"><label>Email</label><input id="aEmail" type="email" placeholder="owner@vrindavan.com" autocomplete="username" onkeydown="if(event.key==='Enter')login()"></div>
+    <div class="lf"><label>Password</label><input id="aPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')login()"></div>
+    <div class="lerr" id="lErr"></div>
+    <button class="lbtn" id="lBtn" onclick="login()">Sign In →</button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="adminApp">
+  <div class="sidebar">
+    <div class="sb-brand">
+      <div class="sb-logo">Vrindavan</div>
+      <div class="sb-role">Admin</div>
+    </div>
+    <div class="sb-sec">Analytics</div>
+    <div class="sb-item on" id="nav-dashboard" onclick="showPage('dashboard',this)">📊 Dashboard</div>
+    <div class="sb-item" id="nav-dishes" onclick="showPage('dishes',this)">🍽️ Dish Sales</div>
+    <div class="sb-item" id="nav-revenue" onclick="showPage('revenue',this)">💰 Revenue</div>
+    <div class="sb-sec">Manage</div>
+    <div class="sb-item" id="nav-orders" onclick="showPage('orders',this)">📋 Orders</div>
+    <div class="sb-item" id="nav-customers" onclick="showPage('customers',this)">👥 Customers</div>
+    <div class="sb-item" id="nav-menu" onclick="showPage('menu',this)">✏️ Menu</div>
+    <div class="sb-footer">
+      <div class="sb-user" id="sbUser"></div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div id="page-dashboard">
+      <div class="page-title">Dashboard</div>
+      <div class="page-sub"><span class="ldot"></span> Live — updates in real time from Firebase</div>
+      <div class="date-bar">
+        <label>From</label><input type="date" id="dateFrom">
+        <label>To</label><input type="date" id="dateTo">
+        <button class="dbtn primary" onclick="applyFilter()">Apply</button>
+        <button class="dbtn secondary" onclick="setToday()">Today</button>
+        <button class="dbtn secondary" onclick="setMonth()">This Month</button>
+      </div>
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="chart-card">
+        <div class="chart-title">Revenue by Hour <span id="chartDateLbl"></span></div>
+        <div class="bars" id="hourlyChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Orders by Hour</div>
+        <div class="bars" id="ordersChart"></div>
+      </div>
+    </div>
+
+    <!-- DISH SALES -->
+    <div id="page-dishes" class="hidden">
+      <div class="page-title">Dish Sales</div>
+      <div class="page-sub"><span class="ldot"></span> Based on selected date range</div>
+      <div class="sec-title">Top Selling Dishes</div>
+      <div class="dish-table">
+        <div class="dt-head"><div>#</div><div>Dish</div><div style="text-align:right">Qty</div><div style="text-align:right">Revenue</div><div style="text-align:right">Avg/Day</div></div>
+        <div id="dishBody"></div>
+      </div>
+      <div class="sec-title" style="margin-top:20px">Revenue by Category</div>
+      <div class="chart-card"><div id="catBreakdown"></div></div>
+    </div>
+
+    <!-- REVENUE -->
+    <div id="page-revenue" class="hidden">
+      <div class="page-title">Revenue</div>
+      <div class="page-sub"><span class="ldot"></span> Live totals</div>
+      <div class="rev-kpi-grid" id="revKpis"></div>
+      <div class="chart-card">
+        <div class="chart-title">7-Day Revenue Trend</div>
+        <div class="bars" id="weekChart"></div>
+      </div>
+    </div>
+
+    <!-- ORDERS -->
+    <div id="page-orders" class="hidden">
+      <div class="page-title">All Orders</div>
+      <div class="page-sub"><span class="ldot"></span> Live — click 🖨️ to print or download receipt</div>
+      <div class="orders-wrap">
+        <div class="ot-head"><div>Order</div><div>Customer</div><div>Items</div><div style="text-align:right">Total</div><div style="text-align:right">Status</div></div>
+        <div id="ordersBody"></div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div id="page-customers" class="hidden">
+      <div class="page-title">Customer Records</div>
+      <div class="page-sub"><span class="ldot"></span> All customers who placed orders</div>
+      <div class="orders-wrap">
+        <div class="ot-head" style="grid-template-columns:140px 120px 80px 80px 1fr"><div>Name</div><div>Phone</div><div style="text-align:right">Orders</div><div style="text-align:right">Spent</div><div>Last Order</div></div>
+        <div id="customersBody"></div>
+      </div>
+    </div>
+
+    <!-- MENU -->
+    <div id="page-menu" class="hidden">
+      <div class="page-title">Menu Management</div>
+      <div class="page-sub">Toggle dishes on/off — changes go live instantly for customers</div>
+      <div id="menuToggles"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toastEl"></div>
+
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, onSnapshot,
+         doc, updateDoc, setDoc, getDoc, getDocs, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// 🔴 PASTE YOUR FIREBASE CONFIG HERE
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+const fb   = initializeApp(firebaseConfig);
+const auth = getAuth(fb);
+const db   = getFirestore(fb);
+const ALLOWED = ['admin','owner'];
+
+let allOrders = [];
+let unsubOrders = null;
+let filterFrom = null, filterTo = null;
+let menuOverrides = {};
+
+const MENU_LIST = [
+  {id:1,name:'Paneer Tikka',cat:'Starters',price:280},
+  {id:2,name:'Hara Bhara Kabab',cat:'Starters',price:220},
+  {id:3,name:'Dahi Puri',cat:'Starters',price:180},
+  {id:4,name:'Aloo Tikki',cat:'Starters',price:160},
+  {id:5,name:'Paneer Butter Masala',cat:'Main Course',price:320},
+  {id:6,name:'Dal Makhani',cat:'Main Course',price:260},
+  {id:7,name:'Shahi Paneer',cat:'Main Course',price:340},
+  {id:8,name:'Masala Dosa',cat:'Main Course',price:180},
+  {id:9,name:'Veg Biryani',cat:'Main Course',price:280},
+  {id:10,name:'Kadhai Paneer',cat:'Main Course',price:300},
+  {id:11,name:'Garlic Naan',cat:'Breads',price:60},
+  {id:12,name:'Tandoori Roti',cat:'Breads',price:40},
+  {id:13,name:'Laccha Paratha',cat:'Breads',price:70},
+  {id:14,name:'Mango Lassi',cat:'Beverages',price:120},
+  {id:15,name:'Masala Chaas',cat:'Beverages',price:80},
+  {id:16,name:'Filter Coffee',cat:'Beverages',price:60},
+  {id:17,name:'Kokum Sharbat',cat:'Beverages',price:90},
+  {id:18,name:'Gulab Jamun',cat:'Desserts',price:120},
+  {id:19,name:'Ras Malai',cat:'Desserts',price:160},
+  {id:20,name:'Gajar Halwa',cat:'Desserts',price:150},
+];
+const STATUS_CLS = {new:'s-new',preparing:'s-preparing',ready:'s-ready',served:'s-served',collected:'s-collected',cancelled:'s-cancelled'};
+
+// ── LOGIN ──────────────────────────────────
+window.login = async () => {
+  const email=document.getElementById('aEmail').value.trim();
+  const pass=document.getElementById('aPass').value;
+  const err=document.getElementById('lErr');
+  const btn=document.getElementById('lBtn');
+  if(!email||!pass){err.textContent='Enter email and password';return;}
+  btn.disabled=true;btn.textContent='Signing in…';err.textContent='';
+  try{
+    const cred=await signInWithEmailAndPassword(auth,email,pass);
+    const snap=await getDoc(doc(db,'staff',cred.user.uid));
+    const role=snap.exists()?snap.data().role:null;
+    if(!ALLOWED.includes(role)){await signOut(auth);err.textContent='Access denied — admin only';btn.disabled=false;btn.textContent='Sign In →';return;}
+    document.getElementById('sbUser').textContent=email;
+    openApp();
+  }catch(e){
+    err.textContent=e.code==='auth/invalid-credential'?'Wrong email or password':(e.message||'Login failed');
+    btn.disabled=false;btn.textContent='Sign In →';
+  }
+};
+
+window.logout=async()=>{if(unsubOrders)unsubOrders();await signOut(auth);location.reload();};
+
+auth.onAuthStateChanged(async u=>{
+  if(u){
+    try{
+      const snap=await getDoc(doc(db,'staff',u.uid));
+      if(snap.exists()&&ALLOWED.includes(snap.data().role)){document.getElementById('sbUser').textContent=u.email;openApp();}
+    }catch{}
+  }
+});
+
+// ── OPEN APP ───────────────────────────────
+function openApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('adminApp').classList.add('on');
+  setToday();
+  subscribeOrders();
+  loadMenuOverrides();
+}
+
+// ── DATE FILTERS ───────────────────────────
+window.setToday=()=>{
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('dateFrom').value=today;
+  document.getElementById('dateTo').value=today;
+  filterFrom=today;filterTo=today;
+  document.getElementById('chartDateLbl').textContent=`— ${new Date().toLocaleDateString('en-IN',{day:'numeric',month:'short'})}`;
+  if(allOrders.length)renderAll();
+};
+window.setMonth=()=>{
+  const now=new Date();
+  filterFrom=new Date(now.getFullYear(),now.getMonth(),1).toISOString().slice(0,10);
+  filterTo=now.toISOString().slice(0,10);
+  document.getElementById('dateFrom').value=filterFrom;
+  document.getElementById('dateTo').value=filterTo;
+  if(allOrders.length)renderAll();
+};
+window.applyFilter=()=>{
+  filterFrom=document.getElementById('dateFrom').value;
+  filterTo=document.getElementById('dateTo').value;
+  if(allOrders.length)renderAll();
+};
+
+function filtered(){
+  return allOrders.filter(o=>{
+    const d=o.createdAt?.toDate?o.createdAt.toDate():new Date(o.createdAt||0);
+    const ds=d.toISOString().slice(0,10);
+    if(filterFrom&&ds<filterFrom)return false;
+    if(filterTo&&ds>filterTo)return false;
+    return true;
+  });
+}
+
+// ── LIVE ORDERS ────────────────────────────
+function subscribeOrders(){
+  const q=query(collection(db,'orders'),orderBy('createdAt','desc'));
+  unsubOrders=onSnapshot(q,snap=>{
+    allOrders=[];
+    snap.forEach(d=>allOrders.push({_id:d.id,...d.data()}));
+    renderAll();
+  },e=>console.error(e));
+}
+
+function renderAll(){
+  const orders=filtered();
+  renderKPIs(orders);
+  renderCharts(orders);
+  renderDishSales(orders);
+  renderRevenue(orders);
+  renderOrders(orders);
+  renderCustomers(orders);
+}
+
+// ── KPIs ───────────────────────────────────
+function renderKPIs(orders){
+  const valid=orders.filter(o=>o.status!=='cancelled');
+  const rev=valid.reduce((a,b)=>a+(b.total||0),0);
+  const served=orders.filter(o=>['served','collected'].includes(o.status)).length;
+  const active=allOrders.filter(o=>['new','preparing','ready'].includes(o.status)).length;
+  const tables=[...new Set(valid.map(o=>o.table))].length;
+  const avg=valid.length?Math.round(rev/valid.length):0;
+  let dishes=0;valid.forEach(o=>(o.items||[]).forEach(i=>dishes+=i.qty));
+  document.getElementById('kpiGrid').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Revenue</div><div class="kpi-val">₹${rev.toLocaleString('en-IN')}</div><div class="kpi-sub na">${valid.length} orders</div></div>
+    <div class="kpi"><div class="kpi-lbl">Avg Order</div><div class="kpi-val">₹${avg}</div><div class="kpi-sub ${served>0?'up':'na'}">${served} served</div></div>
+    <div class="kpi"><div class="kpi-lbl">Dishes Sold</div><div class="kpi-val">${dishes}</div><div class="kpi-sub ${active>0?'warn':'up'}">${active} active now</div></div>
+    <div class="kpi"><div class="kpi-lbl">Tables Today</div><div class="kpi-val">${tables}</div><div class="kpi-sub na">unique tables</div></div>
+  `;
+}
+
+// ── CHARTS ────────────────────────────────
+function renderCharts(orders){
+  const hourly={},hourlyOrd={};
+  for(let h=0;h<24;h++){hourly[h]=0;hourlyOrd[h]=0;}
+  orders.filter(o=>o.status!=='cancelled').forEach(o=>{
+    const h=o.createdAt?.toDate?o.createdAt.toDate().getHours():0;
+    hourly[h]+=(o.total||0);hourlyOrd[h]++;
+  });
+  const hrs=Array.from({length:16},(_,i)=>i+8);
+  const maxR=Math.max(...hrs.map(h=>hourly[h]),1);
+  const maxO=Math.max(...hrs.map(h=>hourlyOrd[h]),1);
+  const lbl=h=>h>12?`${h-12}p`:h===12?'12p':`${h}a`;
+  document.getElementById('hourlyChart').innerHTML=hrs.map(h=>`
+    <div class="bw">
+      <div class="bval">${hourly[h]?'₹'+Math.round(hourly[h]/1000)+'k':''}</div>
+      <div class="bfill rev ${hourly[h]===0?'zero':''}" style="height:${Math.max(2,Math.round(hourly[h]/maxR*90))}px"></div>
+      <div class="blbl">${lbl(h)}</div>
+    </div>`).join('');
+  document.getElementById('ordersChart').innerHTML=hrs.map(h=>`
+    <div class="bw">
+      <div class="bval">${hourlyOrd[h]||''}</div>
+      <div class="bfill ord ${hourlyOrd[h]===0?'zero':''}" style="height:${Math.max(2,Math.round(hourlyOrd[h]/maxO*90))}px"></div>
+      <div class="blbl">${lbl(h)}</div>
+    </div>`).join('');
+}
+
+// ── DISH SALES ─────────────────────────────
+function renderDishSales(orders){
+  const valid=orders.filter(o=>o.status!=='cancelled');
+  const dishMap={},catMap={};
+  const days=new Set();
+  valid.forEach(o=>{
+    const d=o.createdAt?.toDate?o.createdAt.toDate():new Date();
+    days.add(d.toISOString().slice(0,10));
+    (o.items||[]).forEach(i=>{
+      if(!dishMap[i.name])dishMap[i.name]={name:i.name,qty:0,rev:0};
+      dishMap[i.name].qty+=i.qty;dishMap[i.name].rev+=i.qty*i.price;
+      const menuItem=MENU_LIST.find(m=>m.name===i.name||m.id===i.id);
+      const cat=menuItem?.cat||'Other';
+      if(!catMap[cat])catMap[cat]={qty:0,rev:0};
+      catMap[cat].qty+=i.qty;catMap[cat].rev+=i.qty*i.price;
+    });
+  });
+  const numDays=Math.max(days.size,1);
+  const sorted=Object.values(dishMap).sort((a,b)=>b.qty-a.qty);
+  const maxQ=sorted[0]?.qty||1;
+  document.getElementById('dishBody').innerHTML=sorted.slice(0,20).map((d,i)=>`
+    <div class="dt-row">
+      <div class="dt-rank">${i+1}</div>
+      <div><div class="dt-name">${d.name}</div><div class="dt-bar-bg"><div class="dt-bar-fill" style="width:${Math.round(d.qty/maxQ*100)}%"></div></div></div>
+      <div class="num-right">${d.qty}</div>
+      <div class="rev-right">₹${d.rev.toLocaleString('en-IN')}</div>
+      <div class="avg-right">${(d.qty/numDays).toFixed(1)}/day</div>
+    </div>`).join('')||'<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">No data for this period</div>';
+
+  const catSorted=Object.entries(catMap).sort((a,b)=>b[1].rev-a[1].rev);
+  const maxCR=catSorted[0]?.[1].rev||1;
+  document.getElementById('catBreakdown').innerHTML=catSorted.map(([cat,d])=>`
+    <div class="cat-row">
+      <div class="cat-name">${cat}</div>
+      <div class="cat-bar-wrap"><div class="cat-bar-bg"><div class="cat-bar-fill" style="width:${Math.round(d.rev/maxCR*100)}%"></div></div></div>
+      <div class="cat-qty">${d.qty} sold</div>
+      <div class="cat-rev">₹${d.rev.toLocaleString('en-IN')}</div>
+    </div>`).join('')||'<div style="color:var(--muted);font-size:13px;padding:16px">No data</div>';
+}
+
+// ── REVENUE ────────────────────────────────
+function renderRevenue(orders){
+  const valid=orders.filter(o=>o.status!=='cancelled');
+  const total=valid.reduce((a,b)=>a+(b.total||0),0);
+  const collected=orders.filter(o=>o.status==='collected').reduce((a,b)=>a+(b.total||0),0);
+  const pending=valid.filter(o=>!['collected','cancelled'].includes(o.status)).reduce((a,b)=>a+(b.total||0),0);
+  const cancelled=orders.filter(o=>o.status==='cancelled').length;
+  document.getElementById('revKpis').innerHTML=`
+    <div class="kpi"><div class="kpi-lbl">Total Revenue</div><div class="kpi-val">₹${total.toLocaleString('en-IN')}</div><div class="kpi-sub na">excl. cancelled</div></div>
+    <div class="kpi"><div class="kpi-lbl">Collected</div><div class="kpi-val">₹${collected.toLocaleString('en-IN')}</div><div class="kpi-sub up">Cash received</div></div>
+    <div class="kpi"><div class="kpi-lbl">Pending</div><div class="kpi-val">₹${pending.toLocaleString('en-IN')}</div><div class="kpi-sub warn">Not yet paid</div></div>
+    <div class="kpi"><div class="kpi-lbl">Cancelled</div><div class="kpi-val">${cancelled}</div><div class="kpi-sub na">orders</div></div>
+  `;
+  // 7-day trend
+  const days={};
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const k=d.toISOString().slice(0,10);days[k]={rev:0,lbl:d.toLocaleDateString('en-IN',{day:'numeric',month:'short'})};}
+  allOrders.filter(o=>o.status!=='cancelled').forEach(o=>{const k=o.createdAt?.toDate?o.createdAt.toDate().toISOString().slice(0,10):'';if(days[k])days[k].rev+=(o.total||0);});
+  const entries=Object.values(days);const maxD=Math.max(...entries.map(e=>e.rev),1);
+  document.getElementById('weekChart').innerHTML=entries.map(e=>`
+    <div class="bw" style="min-width:40px">
+      <div class="bval">${e.rev?'₹'+Math.round(e.rev/1000)+'k':''}</div>
+      <div class="bfill rev ${e.rev===0?'zero':''}" style="height:${Math.max(2,Math.round(e.rev/maxD*90))}px"></div>
+      <div class="blbl">${e.lbl}</div>
+    </div>`).join('');
+}
+
+// ── ORDERS LIST ─────────────────────────────
+function renderOrders(orders){
+  document.getElementById('ordersBody').innerHTML=orders.map(o=>{
+    const items=(o.items||[]).slice(0,2).map(i=>`${i.name}×${i.qty}`).join(', ')+(o.items?.length>2?`…`:'');
+    const custInfo=o.customer&&o.customer!=='Guest'
+      ?`<div class="ot-cust">${o.customer}</div><div class="ot-cust-phone">📞 ${o.mobile||'—'}</div>`
+      :'<div class="ot-cust" style="color:var(--muted)">Guest</div>';
+    return `<div class="ot-row">
+      <div class="ot-id">
+        <button class="btn-print" onclick="printReceipt('${o._id}')" title="Print/Download Receipt">🖨️</button>
+        #${o.orderId||o._id?.slice(-6)}
+      </div>
+      <div>${custInfo}</div>
+      <div class="ot-items">${items}</div>
+      <div class="ot-amt">₹${o.total||0}</div>
+      <div class="ot-status">
+        <select class="status-select ${o.status}" onchange="updateStatus('${o._id}',this.value,this)">
+          <option value="new" ${o.status==='new'?'selected':''}>New</option>
+          <option value="preparing" ${o.status==='preparing'?'selected':''}>Preparing</option>
+          <option value="ready" ${o.status==='ready'?'selected':''}>Ready</option>
+          <option value="served" ${o.status==='served'?'selected':''}>Served</option>
+          <option value="collected" ${o.status==='collected'?'selected':''}>Paid</option>
+          <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Cancel</option>
+        </select>
+      </div>
+    </div>`;
+  }).join('')||'<div style="padding:28px;text-align:center;color:var(--muted);font-size:13px">No orders for this period</div>';
+}
+
+// ── CUSTOMER RECORDS ───────────────────────
+function renderCustomers(orders){
+  const custMap={};
+  orders.filter(o=>o.customer&&o.customer!=='Guest').forEach(o=>{
+    const key=o.mobile||o.customer;
+    if(!custMap[key])custMap[key]={name:o.customer,phone:o.mobile||'—',orders:0,spent:0,lastOrder:null};
+    custMap[key].orders++;
+    custMap[key].spent+=(o.total||0);
+    const d=o.createdAt?.toDate?o.createdAt.toDate():new Date(o.createdAt||0);
+    if(!custMap[key].lastOrder||d>custMap[key].lastOrder)custMap[key].lastOrder=d;
+  });
+  const sorted=Object.values(custMap).sort((a,b)=>b.spent-a.spent);
+  document.getElementById('customersBody').innerHTML=sorted.map(c=>`
+    <div class="ot-row" style="grid-template-columns:140px 120px 80px 80px 1fr">
+      <div style="font-weight:500">${c.name}</div>
+      <div>📞 ${c.phone}</div>
+      <div style="text-align:right;font-weight:600">${c.orders}</div>
+      <div style="text-align:right;font-weight:600;color:var(--accent)">₹${c.spent.toLocaleString('en-IN')}</div>
+      <div style="color:var(--muted);font-size:11px">${c.lastOrder?c.lastOrder.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}):''}</div>
+    </div>`).join('')||'<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px">No customer data yet</div>';
+}
+
+// ── UPDATE STATUS ───────────────────────────
+window.updateStatus=async(docId,status,sel)=>{
+  sel.className=`status-select ${status}`;
+  await updateDoc(doc(db,'orders',docId),{status,updatedAt:serverTimestamp()});
+  const o=allOrders.find(x=>x._id===docId);if(o)o.status=status;
+  toast(`Status → ${status}`);
+};
+
+// ── PRINT RECEIPT ───────────────────────────
+window.printReceipt=(id)=>{
+  const o=allOrders.find(x=>x._id===id);if(!o)return;
+
+  const itemsHtml=(o.items||[]).map(i=>`
+    <tr>
+      <td style="text-align:left;padding:5px 0;border-bottom:1px dotted #ddd">${i.name}</td>
+      <td style="text-align:center;padding:5px 0;border-bottom:1px dotted #ddd;width:32px">${i.qty}</td>
+      <td style="text-align:right;padding:5px 0;border-bottom:1px dotted #ddd;width:56px">₹${i.price*i.qty}</td>
+    </tr>`).join('');
+
+  const custHtml=(o.customer&&o.customer!=='Guest')
+    ?`<tr><td colspan="2" style="padding:3px 0"><b>Name:</b> ${o.customer}</td></tr>
+       <tr><td colspan="2" style="padding:3px 0"><b>Phone:</b> ${o.mobile||'—'}</td></tr>`:'';
+
+  const timeStr=o.createdAt?.toDate
+    ?o.createdAt.toDate().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})
+    :new Date().toLocaleString('en-IN');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Receipt #${o.orderId||o._id.slice(-6)}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Courier New',monospace;font-size:13px;color:#000;background:#fff;width:80mm;padding:12px}
+h2{text-align:center;font-size:16px;margin-bottom:2px}
+.sub{text-align:center;font-size:11px;color:#555;margin-bottom:10px}
+hr{border:none;border-top:1px dashed #888;margin:8px 0}
+table{width:100%;border-collapse:collapse}td{font-size:12px;vertical-align:top}
+.th{font-weight:bold;border-bottom:1px solid #000;padding-bottom:4px;font-size:12px}
+.total{text-align:right;font-size:15px;font-weight:bold;margin-top:8px}
+.footer{text-align:center;font-size:11px;color:#555;margin-top:14px;line-height:1.7}
+@media print{@page{margin:2mm;size:80mm auto}body{width:80mm}}
+</style></head><body>
+<h2>Vrindavan</h2>
+<div class="sub">Pure Veg · Est. 1995</div>
+<hr>
+<table>
+  <tr><td colspan="2" style="padding:3px 0"><b>Order:</b> #${o.orderId||o._id.slice(-6)}</td></tr>
+  <tr><td colspan="2" style="padding:3px 0"><b>Table:</b> ${o.table}</td></tr>
+  ${custHtml}
+  <tr><td colspan="2" style="padding:3px 0"><b>Time:</b> ${timeStr}</td></tr>
+  ${o.instructions?`<tr><td colspan="2" style="padding:3px 0"><b>Note:</b> ${o.instructions}</td></tr>`:''}
+</table>
+<hr>
+<table>
+  <thead><tr>
+    <th class="th" style="text-align:left">Item</th>
+    <th class="th" style="text-align:center;width:32px">Qty</th>
+    <th class="th" style="text-align:right;width:56px">Amt</th>
+  </tr></thead>
+  <tbody>${itemsHtml}</tbody>
+</table>
+<hr>
+<div class="total">Total: ₹${o.total||0}</div>
+<div class="footer">Thank You! Visit Again 🙏<br>Vrindavan — Pure Veg · Est. 1995</div>
+<script>
+window.onload=()=>{
+  setTimeout(()=>{
+    window.print();
+    window.onafterprint=()=>window.close();
+  },300);
+};
+<\/script>
+</body></html>`;
+
+  const w=window.open('','_blank','width=420,height=620,menubar=no,toolbar=no,location=no,scrollbars=yes');
+  if(!w){toast('⚠️ Allow popups to print receipts');return;}
+  w.document.write(html);
+  w.document.close();
+};
+
+// ── MENU TOGGLES ───────────────────────────
+async function loadMenuOverrides(){
+  try{
+    const snap=await getDocs(collection(db,'menuOverrides'));
+    snap.forEach(d=>{menuOverrides[d.id]=d.data().inStock;});
+  }catch{}
+  renderMenuToggles();
+}
+
+function renderMenuToggles(){
+  const bycat={};
+  MENU_LIST.forEach(d=>{if(!bycat[d.cat])bycat[d.cat]=[];bycat[d.cat].push(d);});
+  let html='';
+  Object.entries(bycat).forEach(([cat,items])=>{
+    html+=`<div class="menu-cat-title">${cat}</div>`;
+    items.forEach(d=>{
+      const on=menuOverrides[d.id]!==undefined?menuOverrides[d.id]:true;
+      html+=`<div class="menu-item">
+        <div class="mi-veg"></div>
+        <div style="flex:1"><div class="mi-name">${d.name}</div><div class="mi-cat">${d.cat}</div></div>
+        <div class="mi-price">₹${d.price}</div>
+        <div class="toggle ${on?'on':''}" id="tog-${d.id}" onclick="toggleItem(${d.id},${!on})"></div>
+      </div>`;
+    });
+  });
+  document.getElementById('menuToggles').innerHTML=html;
+}
+
+window.toggleItem=async(id,val)=>{
+  menuOverrides[id]=val;
+  const el=document.getElementById('tog-'+id);if(el)el.className='toggle'+(val?' on':'');
+  try{
+    await setDoc(doc(db,'menuOverrides',String(id)),{inStock:val,updatedAt:serverTimestamp()});
+    const item=MENU_LIST.find(m=>m.id===id);
+    toast(`${item?.name||'Item'} → ${val?'Available ✓':'Sold Out'}`);
+  }catch(e){toast('Failed — check connection');console.error(e);}
+  renderMenuToggles();
+};
+
+// ── PAGE NAV ───────────────────────────────
+window.showPage=(name,btn)=>{
+  ['dashboard','dishes','revenue','orders','customers','menu'].forEach(p=>{
+    document.getElementById('page-'+p).classList.toggle('hidden',p!==name);
+    document.getElementById('nav-'+p).classList.toggle('on',p===name);
+  });
+};
+
+// ── TOAST ──────────────────────────────────
+let tt;
+window.toast=msg=>{const el=document.getElementById('toastEl');el.textContent=msg;el.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>el.classList.remove('show'),2600);};
+</script>
+</body>
+</html>
